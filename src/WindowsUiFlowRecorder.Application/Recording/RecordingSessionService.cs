@@ -1,50 +1,147 @@
 namespace WindowsUiFlowRecorder.Application.Recording;
 
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using WindowsUiFlowRecorder.Application.Abstractions;
+using WindowsUiFlowRecorder.Application.Launching;
+using WindowsUiFlowRecorder.Application.Export;
+using WindowsUiFlowRecorder.Application.Settings;
+using WindowsUiFlowRecorder.Domain.Abstractions;
 using WindowsUiFlowRecorder.Domain.Common;
 using WindowsUiFlowRecorder.Domain.Entities;
+using WindowsUiFlowRecorder.Domain.Policies;
 
-public class RecordingSessionService : IRecordingSessionService
+public class RecordingSessionService : IRecordingSessionService, IDisposable
 {
+    private readonly IApplicationLaunchOrchestrator _launchOrchestrator;
+    private readonly IGlobalInputHook _inputHook;
+    private readonly IUiAutomationProvider _uiAutomation;
+    private readonly IScreenshotCapturer _screenshotCapturer;
+    private readonly IProcessLaunchMonitor _processMonitor;
+    private readonly IExportService _exportService;
+    private readonly ISessionRepository _sessionRepository;
+    private readonly ISettingsService _settingsService;
     private readonly ILogger<RecordingSessionService> _logger;
+
     private RecordingSession? _session;
+    private ApplicationLaunchChain? _launchChain;
+    private CancellationTokenSource? _captureCts;
     private readonly object _lock = new();
+    private readonly ConcurrentQueue<RawInputEvent> _inputQueue = new();
+    private int _sequenceNumber;
+
+    private const int HeartbeatThresholdSeconds = 5;
 
     public RecordingSessionState CurrentState { get; private set; } = RecordingSessionState.Idle;
+    public RecordingSession? CurrentSession => _session;
     public event Action<RecordingSessionState>? StateChanged;
+    public event Action<string>? ErrorOccurred;
 
-    public RecordingSessionService(ILogger<RecordingSessionService> logger)
+    public RecordingSessionService(
+        IApplicationLaunchOrchestrator launchOrchestrator,
+        IGlobalInputHook inputHook,
+        IUiAutomationProvider uiAutomation,
+        IScreenshotCapturer screenshotCapturer,
+        IProcessLaunchMonitor processMonitor,
+        IExportService exportService,
+        ISessionRepository sessionRepository,
+        ISettingsService settingsService,
+        ILogger<RecordingSessionService> logger)
     {
+        _launchOrchestrator = launchOrchestrator;
+        _inputHook = inputHook;
+        _uiAutomation = uiAutomation;
+        _screenshotCapturer = screenshotCapturer;
+        _processMonitor = processMonitor;
+        _exportService = exportService;
+        _sessionRepository = sessionRepository;
+        _settingsService = settingsService;
         _logger = logger;
     }
 
-    public Task<Result> StartSessionAsync(
-        ApplicationLaunchChain launchChain,
-        IReadOnlyList<TargetApplicationContext> contexts,
-        CancellationToken ct)
+    public Task<Result> PrepareAsync(ApplicationLaunchChain launchChain, CancellationToken ct)
     {
         lock (_lock)
         {
-            if (CurrentState != RecordingSessionState.Configuring && CurrentState != RecordingSessionState.Idle)
-                return Task.FromResult(Result.Failure(FailureReason.Unknown, "Session must be in Idle or Configuring state to start"));
+            if (CurrentState != RecordingSessionState.Idle)
+                return Task.FromResult(Result.Failure(FailureReason.Unknown,
+                    "Session must be Idle to prepare"));
 
-            _session = new RecordingSession
-            {
-                SessionId = Guid.NewGuid(),
-                Name = $"Session_{DateTime.UtcNow:yyyyMMdd_HHmmss}",
-                State = RecordingSessionState.Recording,
-                TargetApplicationContexts = [.. contexts],
-                CreatedAtUtc = DateTime.UtcNow,
-                StartedAtUtc = DateTime.UtcNow,
-                ApplicationProfileId = null
-            };
-
-            SetState(RecordingSessionState.Recording);
-            _logger.LogInformation("Session {SessionId} started with {ContextCount} contexts",
-                _session.SessionId, contexts.Count);
+            _launchChain = launchChain;
+            SetState(RecordingSessionState.Configuring);
+            _logger.LogInformation("Session configured with {StepCount} launch steps", launchChain.Steps.Count);
             return Task.FromResult(Result.Success());
         }
+    }
+
+    public async Task<Result> StartRecordingAsync(CancellationToken ct)
+    {
+        lock (_lock)
+        {
+            if (CurrentState != RecordingSessionState.Configuring)
+                return Result.Failure(FailureReason.Unknown,
+                    "Session must be Configuring to start recording");
+            SetState(RecordingSessionState.LaunchingChain);
+        }
+
+        if (_launchChain == null)
+        {
+            SetState(RecordingSessionState.LaunchFailed);
+            var msg = "No launch chain configured";
+            ErrorOccurred?.Invoke(msg);
+            return Result.Failure(FailureReason.InvalidLaunchChain, msg);
+        }
+
+        var settings = (await _settingsService.GetSettingsAsync()).Value;
+        var pollInterval = settings?.DefaultReadinessPollIntervalMilliseconds ?? 250;
+
+        var launchResult = await _launchOrchestrator.ExecuteLaunchChainAsync(
+            _launchChain, pollInterval, ct);
+
+        if (!launchResult.IsSuccess)
+        {
+            SetState(RecordingSessionState.LaunchFailed);
+            var msg = $"Launch chain failed: {launchResult.ErrorMessage}";
+            ErrorOccurred?.Invoke(msg);
+            _logger.LogError("Launch chain failed: {Reason}", launchResult.ErrorMessage);
+            return Result.Failure(launchResult.FailureReason!.Value, launchResult.ErrorMessage);
+        }
+
+        var contexts = launchResult.Value!;
+        var processIds = contexts.Select(c => c.ProcessId).ToList();
+
+        _session = new RecordingSession
+        {
+            SessionId = Guid.NewGuid(),
+            Name = $"Session_{DateTime.UtcNow:yyyyMMdd_HHmmss}",
+            State = RecordingSessionState.Recording,
+            TargetApplicationContexts = [.. contexts],
+            CreatedAtUtc = DateTime.UtcNow,
+            StartedAtUtc = DateTime.UtcNow,
+            ApplicationProfileId = null
+        };
+
+        _captureCts = new CancellationTokenSource();
+
+        _ = _processMonitor.SubscribeToExitEventsAsync(processIds, OnTargetProcessExited);
+
+        await _inputHook.SubscribeAsync(OnRawInputEvent, ct);
+
+        await _uiAutomation.SubscribeToEventsAsync(
+            contexts,
+            OnFocusChanged,
+            OnWindowActivated,
+            OnWindowOpened,
+            ct);
+
+        _ = Task.Run(() => CaptureProcessingLoopAsync(_captureCts.Token), ct);
+        _ = Task.Run(() => HeartbeatMonitorAsync(_captureCts.Token), ct);
+
+        SetState(RecordingSessionState.Recording);
+        _logger.LogInformation("Recording started for session {SessionId} with {ContextCount} contexts",
+            _session.SessionId, contexts.Count);
+
+        return Result.Success();
     }
 
     public Result PauseSession()
@@ -73,24 +170,50 @@ public class RecordingSessionService : IRecordingSessionService
         }
     }
 
-    public Task<Result<RecordingSession>> StopSessionAsync()
+    public async Task<Result<RecordingSession>> StopSessionAsync(CancellationToken ct)
     {
+        RecordingSession? session;
         lock (_lock)
         {
             if (CurrentState is not (RecordingSessionState.Recording or RecordingSessionState.Paused))
-                return Task.FromResult(Result<RecordingSession>.Failure(FailureReason.Unknown, "No active session to stop"));
+                return Result<RecordingSession>.Failure(FailureReason.Unknown,
+                    "No active session to stop");
 
-            if (_session == null)
-                return Task.FromResult(Result<RecordingSession>.Failure(FailureReason.SessionNotFound, "No session exists"));
-
-            _session.StoppedAtUtc = DateTime.UtcNow;
-            _session.State = RecordingSessionState.Stopped;
+            session = _session;
+            if (session == null)
+                return Result<RecordingSession>.Failure(FailureReason.SessionNotFound,
+                    "No session exists");
 
             SetState(RecordingSessionState.Stopped);
-            _logger.LogInformation("Session {SessionId} stopped with {ActionCount} actions",
-                _session.SessionId, _session.Actions.Count);
+        }
 
-            return Task.FromResult(Result<RecordingSession>.Success(_session));
+        _captureCts?.Cancel();
+
+        await _inputHook.UnsubscribeAsync();
+        await _uiAutomation.UnsubscribeAllAsync();
+        await _processMonitor.UnsubscribeAllAsync();
+
+        session.StoppedAtUtc = DateTime.UtcNow;
+        session.State = RecordingSessionState.Stopped;
+
+        await _sessionRepository.SaveSessionAsync(session);
+
+        _logger.LogInformation("Session {SessionId} stopped with {ActionCount} actions and {WindowCount} windows",
+            session.SessionId, session.Actions.Count, session.Windows.Count);
+
+        SetState(RecordingSessionState.Reviewing);
+        return Result<RecordingSession>.Success(session);
+    }
+
+    public void ResetToIdle()
+    {
+        lock (_lock)
+        {
+            _session = null;
+            _launchChain = null;
+            _captureCts?.Cancel();
+            _captureCts = null;
+            SetState(RecordingSessionState.Idle);
         }
     }
 
@@ -100,23 +223,353 @@ public class RecordingSessionService : IRecordingSessionService
         {
             if (_session == null) return null;
 
+            var contexts = _session.TargetApplicationContexts;
+            var screenshotCount = _session.Actions.Count(a => a.ScreenshotId != null);
+
             return new SessionListItem(
                 _session.SessionId,
                 _session.Name,
                 _session.CreatedAtUtc,
-                (int)((_session.StoppedAtUtc ?? DateTime.UtcNow) - _session.StartedAtUtc ?? TimeSpan.Zero).TotalSeconds,
-                _session.TargetApplicationContexts.Select(c => c.ApplicationTag).ToList(),
+                (int)((_session.StoppedAtUtc ?? DateTime.UtcNow) - (_session.StartedAtUtc ?? DateTime.UtcNow)).TotalSeconds,
+                contexts.Select(c => c.ApplicationTag).ToList(),
                 _session.Actions.Count,
                 _session.Windows.Count,
-                0,
+                screenshotCount,
                 _session.Note
             );
         }
+    }
+
+    public async Task<Result> ExportSessionAsync(string outputDirectory, CancellationToken ct)
+    {
+        RecordingSession? session;
+        lock (_lock)
+        {
+            if (CurrentState is not (RecordingSessionState.Reviewing or RecordingSessionState.Stopped or RecordingSessionState.Exported))
+                return Result.Failure(FailureReason.Unknown, "Session must be in review state to export");
+
+            session = _session;
+            if (session == null)
+                return Result.Failure(FailureReason.SessionNotFound, "No session to export");
+        }
+
+        SetState(RecordingSessionState.Exporting);
+
+        var result = await _exportService.ExportSessionAsync(session, outputDirectory, ct);
+
+        if (result.IsSuccess)
+        {
+            SetState(RecordingSessionState.Exported);
+            _logger.LogInformation("Session exported to {Path}", outputDirectory);
+        }
+        else
+        {
+            SetState(RecordingSessionState.Reviewing);
+            ErrorOccurred?.Invoke(result.ErrorMessage ?? "Export failed");
+        }
+
+        return result;
+    }
+
+    private void OnRawInputEvent(RawInputEvent evt)
+    {
+        if (CurrentState != RecordingSessionState.Recording) return;
+        _inputQueue.Enqueue(evt);
+    }
+
+    private void OnFocusChanged(ElementInfo element)
+    {
+        if (CurrentState != RecordingSessionState.Recording) return;
+        _inputQueue.Enqueue(new RawInputEvent(
+            InputEventType.FocusGained, DateTime.UtcNow, null, null, false, IntPtr.Zero));
+    }
+
+    private void OnWindowActivated(WindowSnapshot snapshot)
+    {
+        if (CurrentState != RecordingSessionState.Recording) return;
+
+        lock (_lock)
+        {
+            if (_session != null && !_session.Windows.ContainsKey(snapshot.WindowId))
+            {
+                _session.Windows[snapshot.WindowId] = snapshot;
+                _logger.LogDebug("Window captured: {Title}", snapshot.Title);
+            }
+        }
+
+        _inputQueue.Enqueue(new RawInputEvent(
+            InputEventType.WindowActivated, DateTime.UtcNow, null, null, false, IntPtr.Zero));
+    }
+
+    private void OnWindowOpened(IntPtr windowHandle)
+    {
+        _logger.LogDebug("New window opened: {Handle}", windowHandle);
+    }
+
+    private void OnTargetProcessExited(int processId)
+    {
+        _logger.LogWarning("Target process exited: {Pid}", processId);
+
+        lock (_lock)
+        {
+            if (_session == null) return;
+
+            var ctx = _session.TargetApplicationContexts
+                .FirstOrDefault(c => c.ProcessId == processId);
+            if (ctx == null) return;
+
+            var index = _session.TargetApplicationContexts.IndexOf(ctx);
+            _session.TargetApplicationContexts[index] = ctx with
+            {
+                IsActive = false,
+                TerminatedAtUtc = DateTime.UtcNow,
+                TerminationReason = TargetTerminationReason.ProcessCrashed
+            };
+
+            var allInactive = _session.TargetApplicationContexts.All(c => !c.IsActive);
+            if (allInactive)
+            {
+                _logger.LogInformation("All target processes exited, auto-stopping session");
+                _ = StopSessionInternalAsync("All target applications exited");
+            }
+        }
+    }
+
+    private async Task StopSessionInternalAsync(string reason)
+    {
+        try
+        {
+            await StopSessionAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to auto-stop session: {Reason}", reason);
+        }
+    }
+
+    private async Task CaptureProcessingLoopAsync(CancellationToken ct)
+    {
+        var coalesceWindow = new List<RawInputEvent>();
+        RawInputEvent? lastEvent = null;
+        var windowBatch = new HashSet<Guid>();
+        var lastCoalesceReset = DateTime.UtcNow;
+        var settings = (await _settingsService.GetSettingsAsync()).Value;
+
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                if (CurrentState != RecordingSessionState.Recording)
+                {
+                    await Task.Delay(50, ct);
+                    continue;
+                }
+
+                if (_inputQueue.TryDequeue(out var evt))
+                {
+                    var now = DateTime.UtcNow;
+
+                    if (ShouldStartNewCoalesceWindow(lastEvent, evt, now, lastCoalesceReset))
+                    {
+                        if (coalesceWindow.Count > 0)
+                        {
+                            await FlushCoalescedActionAsync(coalesceWindow, settings, ct);
+                        }
+                        coalesceWindow.Clear();
+                        lastCoalesceReset = now;
+                    }
+
+                    coalesceWindow.Add(evt);
+                    lastEvent = evt;
+                }
+                else
+                {
+                    if (coalesceWindow.Count > 0 &&
+                        (DateTime.UtcNow - lastCoalesceReset).TotalMilliseconds > 1500)
+                    {
+                        await FlushCoalescedActionAsync(coalesceWindow, settings, ct);
+                        coalesceWindow.Clear();
+                        lastCoalesceReset = DateTime.UtcNow;
+                    }
+
+                    await Task.Delay(10, ct);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in capture processing loop");
+                await Task.Delay(100, ct);
+            }
+        }
+
+        if (coalesceWindow.Count > 0)
+        {
+            await FlushCoalescedActionAsync(coalesceWindow, settings, CancellationToken.None);
+        }
+    }
+
+    private static bool ShouldStartNewCoalesceWindow(
+        RawInputEvent? last, RawInputEvent current, DateTime now, DateTime lastReset)
+    {
+        if (last == null) return false;
+
+        if (last.Value.EventType == InputEventType.MouseDown && current.EventType == InputEventType.MouseUp)
+            return false;
+
+        if (current.EventType == InputEventType.MouseDown && last.Value.EventType != InputEventType.MouseMove)
+            return true;
+
+        if (current.EventType == InputEventType.WindowActivated)
+            return true;
+
+        if ((now - lastReset).TotalMilliseconds > 1500)
+            return true;
+
+        return false;
+    }
+
+    private async Task FlushCoalescedActionAsync(
+        List<RawInputEvent> events, Settings? settings, CancellationToken ct)
+    {
+        if (events.Count == 0 || _session == null) return;
+
+        try
+        {
+            var first = events[0];
+            var last = events[^1];
+
+            ElementInfo? targetElement = null;
+            Guid windowId = Guid.Empty;
+            string applicationTag = "Unknown";
+
+            if (last.ScreenPosition.HasValue)
+            {
+                var elementResult = await _uiAutomation.GetElementAtPointAsync(
+                    last.ScreenPosition.Value, ct);
+                if (elementResult.IsSuccess)
+                    targetElement = elementResult.Value;
+            }
+            else if (first.EventType is InputEventType.KeyDown or InputEventType.KeyUp or InputEventType.FocusGained)
+            {
+                var focusResult = await _uiAutomation.GetFocusedElementAsync(ct);
+                if (focusResult.IsSuccess)
+                    targetElement = focusResult.Value;
+            }
+            else if (first.EventType == InputEventType.WindowActivated)
+            {
+                var handle = last.WindowHandle;
+                if (handle.HasValue && handle.Value != IntPtr.Zero)
+                {
+                    var winResult = await _uiAutomation.WalkHierarchyAsync(handle.Value, 5000, ct);
+                    if (winResult.IsSuccess)
+                    {
+                        var snapshot = winResult.Value;
+                        windowId = snapshot.WindowId;
+                        targetElement = snapshot.RootElement;
+                        applicationTag = snapshot.ApplicationTag;
+
+                        lock (_lock)
+                        {
+                            if (!_session.Windows.ContainsKey(windowId))
+                                _session.Windows[windowId] = snapshot;
+                        }
+                    }
+                }
+            }
+
+            if (targetElement != null && windowId == Guid.Empty)
+            {
+                var owningResult = await _uiAutomation.GetOwningWindowAsync(targetElement, ct);
+                if (owningResult.IsSuccess)
+                {
+                    windowId = owningResult.Value.WindowId;
+                    applicationTag = owningResult.Value.ApplicationTag;
+                    lock (_lock)
+                    {
+                        if (!_session.Windows.ContainsKey(windowId))
+                            _session.Windows[windowId] = owningResult.Value;
+                    }
+                }
+            }
+
+            var seq = Interlocked.Increment(ref _sequenceNumber);
+            var action = ActionCoalescingPolicy.Coalesce(
+                events.AsReadOnly(),
+                targetElement ?? new ElementInfo("unknown", null, null, "Unknown", null, null, null,
+                    false, false, false, new BoundingRectangle(0, 0, 0, 0), [], null, 0, []),
+                windowId,
+                applicationTag,
+                seq);
+
+            var screenshotMode = settings?.ScreenshotMode ?? ScreenshotMode.EveryAction;
+            if (screenshotMode == ScreenshotMode.EveryAction ||
+                (screenshotMode == ScreenshotMode.WindowChangeOnly && action.ActionType == ActionType.WindowActivated))
+            {
+                var workingFolder = GetSessionScreenshotsFolder();
+                var screenshotResult = await _screenshotCapturer.CaptureFullScreenAsync(workingFolder, ct);
+                if (screenshotResult.IsSuccess)
+                {
+                    var updatedAction = action with { ScreenshotId = screenshotResult.Value.ScreenshotId };
+                    action = updatedAction;
+                }
+            }
+
+            lock (_lock)
+            {
+                _session.Actions.Add(action);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to flush coalesced action");
+        }
+    }
+
+    private async Task HeartbeatMonitorAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(2000, ct);
+
+                var elapsed = (DateTime.UtcNow - _inputHook.LastHeartbeatUtc).TotalSeconds;
+                if (elapsed > HeartbeatThresholdSeconds && CurrentState == RecordingSessionState.Recording)
+                {
+                    _logger.LogWarning("Input hook heartbeat stale ({Elapsed:F1}s) - capture may be incomplete", elapsed);
+                    ErrorOccurred?.Invoke("Input hook may be disconnected. Capture may be incomplete.");
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+        }
+    }
+
+    private string GetSessionScreenshotsFolder()
+    {
+        var baseDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "WindowsUiFlowRecorder", "Sessions",
+            _session?.SessionId.ToString() ?? "unknown");
+        return Path.Combine(baseDir, "screenshots");
     }
 
     private void SetState(RecordingSessionState newState)
     {
         CurrentState = newState;
         StateChanged?.Invoke(newState);
+    }
+
+    public void Dispose()
+    {
+        _captureCts?.Cancel();
+        _captureCts?.Dispose();
+        (_inputHook as IDisposable)?.Dispose();
     }
 }

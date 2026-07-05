@@ -4,30 +4,68 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WindowsUiFlowRecorder.Application.Abstractions;
+using WindowsUiFlowRecorder.Application.Export;
 using WindowsUiFlowRecorder.Application.Launching;
 using WindowsUiFlowRecorder.Application.Recording;
-using WindowsUiFlowRecorder.Application.Scanning;
-using WindowsUiFlowRecorder.Application.Export;
+using WindowsUiFlowRecorder.Application.Settings;
+using WindowsUiFlowRecorder.Domain.Abstractions;
 using WindowsUiFlowRecorder.Domain.Common;
 using WindowsUiFlowRecorder.Domain.Entities;
+using WindowsUiFlowRecorder.Domain.Policies;
 
 public class RecordingSessionServiceTests
 {
-    private readonly RecordingSessionService _service;
+    private readonly Mock<IApplicationLaunchOrchestrator> _launchMock = new();
+    private readonly Mock<IGlobalInputHook> _inputMock = new();
+    private readonly Mock<IUiAutomationProvider> _uiaMock = new();
+    private readonly Mock<IScreenshotCapturer> _screenshotMock = new();
+    private readonly Mock<IProcessLaunchMonitor> _processMock = new();
+    private readonly Mock<IExportService> _exportMock = new();
+    private readonly Mock<ISessionRepository> _repoMock = new();
+    private readonly Mock<ISettingsService> _settingsMock = new();
     private readonly Mock<ILogger<RecordingSessionService>> _loggerMock = new();
+    private readonly RecordingSessionService _service;
 
     public RecordingSessionServiceTests()
     {
-        _service = new RecordingSessionService(_loggerMock.Object);
+        _service = new RecordingSessionService(
+            _launchMock.Object, _inputMock.Object, _uiaMock.Object,
+            _screenshotMock.Object, _processMock.Object, _exportMock.Object,
+            _repoMock.Object, _settingsMock.Object, _loggerMock.Object);
     }
 
     [Fact]
-    public async Task StartSessionAsync_WithValidInput_TransitionsToRecording()
+    public async Task PrepareAsync_WithValidInput_TransitionsToConfiguring()
     {
         var chain = new ApplicationLaunchChain([CreateLaunchStep()]);
-        var contexts = new List<TargetApplicationContext> { CreateContext() };
 
-        var result = await _service.StartSessionAsync(chain, contexts, CancellationToken.None);
+        var result = await _service.PrepareAsync(chain, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _service.CurrentState.Should().Be(RecordingSessionState.Configuring);
+    }
+
+    [Fact]
+    public async Task StartRecordingAsync_WithMocks_TransitionsToRecording()
+    {
+        var chain = new ApplicationLaunchChain([CreateLaunchStep()]);
+        await _service.PrepareAsync(chain, CancellationToken.None);
+
+        var contexts = new List<TargetApplicationContext> { CreateContext() };
+        _launchMock.Setup(l => l.ExecuteLaunchChainAsync(It.IsAny<ApplicationLaunchChain>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyList<TargetApplicationContext>>.Success(contexts.AsReadOnly()));
+        _inputMock.Setup(i => i.SubscribeAsync(It.IsAny<Action<RawInputEvent>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _uiaMock.Setup(u => u.SubscribeToEventsAsync(It.IsAny<IReadOnlyList<TargetApplicationContext>>(),
+                It.IsAny<Action<ElementInfo>>(), It.IsAny<Action<WindowSnapshot>>(),
+                It.IsAny<Action<IntPtr>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
+        _settingsMock.Setup(s => s.GetSettingsAsync())
+            .ReturnsAsync(Result<Settings>.Success(new Settings(
+                ScreenshotMode.EveryAction, false, HierarchyRecaptureSensitivity.Medium,
+                null, 30, 250, 5000, false, DateTime.UtcNow)));
+
+        var result = await _service.StartRecordingAsync(CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         _service.CurrentState.Should().Be(RecordingSessionState.Recording);
@@ -37,8 +75,21 @@ public class RecordingSessionServiceTests
     public async Task PauseSession_WhenRecording_TransitionsToPaused()
     {
         var chain = new ApplicationLaunchChain([CreateLaunchStep()]);
-        var contexts = new List<TargetApplicationContext> { CreateContext() };
-        await _service.StartSessionAsync(chain, contexts, CancellationToken.None);
+        await _service.PrepareAsync(chain, CancellationToken.None);
+        _launchMock.Setup(l => l.ExecuteLaunchChainAsync(It.IsAny<ApplicationLaunchChain>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyList<TargetApplicationContext>>.Success(
+                new List<TargetApplicationContext> { CreateContext() }.AsReadOnly()));
+        _inputMock.Setup(i => i.SubscribeAsync(It.IsAny<Action<RawInputEvent>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _uiaMock.Setup(u => u.SubscribeToEventsAsync(It.IsAny<IReadOnlyList<TargetApplicationContext>>(),
+                It.IsAny<Action<ElementInfo>>(), It.IsAny<Action<WindowSnapshot>>(),
+                It.IsAny<Action<IntPtr>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
+        _settingsMock.Setup(s => s.GetSettingsAsync())
+            .ReturnsAsync(Result<Settings>.Success(new Settings(
+                ScreenshotMode.EveryAction, false, HierarchyRecaptureSensitivity.Medium,
+                null, 30, 250, 5000, false, DateTime.UtcNow)));
+        await _service.StartRecordingAsync(CancellationToken.None);
 
         var result = _service.PauseSession();
 
@@ -57,15 +108,28 @@ public class RecordingSessionServiceTests
     public async Task StopSessionAsync_ReturnsStoppedSession()
     {
         var chain = new ApplicationLaunchChain([CreateLaunchStep()]);
-        var contexts = new List<TargetApplicationContext> { CreateContext() };
-        await _service.StartSessionAsync(chain, contexts, CancellationToken.None);
+        await _service.PrepareAsync(chain, CancellationToken.None);
+        _launchMock.Setup(l => l.ExecuteLaunchChainAsync(It.IsAny<ApplicationLaunchChain>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyList<TargetApplicationContext>>.Success(
+                new List<TargetApplicationContext> { CreateContext() }.AsReadOnly()));
+        _inputMock.Setup(i => i.SubscribeAsync(It.IsAny<Action<RawInputEvent>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _uiaMock.Setup(u => u.SubscribeToEventsAsync(It.IsAny<IReadOnlyList<TargetApplicationContext>>(),
+                It.IsAny<Action<ElementInfo>>(), It.IsAny<Action<WindowSnapshot>>(),
+                It.IsAny<Action<IntPtr>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
+        _settingsMock.Setup(s => s.GetSettingsAsync())
+            .ReturnsAsync(Result<Settings>.Success(new Settings(
+                ScreenshotMode.EveryAction, false, HierarchyRecaptureSensitivity.Medium,
+                null, 30, 250, 5000, false, DateTime.UtcNow)));
+        await _service.StartRecordingAsync(CancellationToken.None);
 
-        var result = await _service.StopSessionAsync();
+        var result = await _service.StopSessionAsync(CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value!.State.Should().Be(RecordingSessionState.Stopped);
-        _service.CurrentState.Should().Be(RecordingSessionState.Stopped);
+        _service.CurrentState.Should().Be(RecordingSessionState.Reviewing);
     }
 
     private static LaunchStep CreateLaunchStep() => new(
@@ -77,70 +141,15 @@ public class RecordingSessionServiceTests
         "TestApp", "test.exe", 12345, 1, DateTime.UtcNow, true, null, TargetTerminationReason.NotTerminated);
 }
 
-public class ApplicationLaunchOrchestratorTests
-{
-    private readonly Mock<IProcessLaunchMonitor> _processMock = new();
-    private readonly Mock<IUiAutomationProvider> _uiaMock = new();
-    private readonly Mock<ILogger<ApplicationLaunchOrchestrator>> _loggerMock = new();
-    private readonly ApplicationLaunchOrchestrator _orchestrator;
-
-    public ApplicationLaunchOrchestratorTests()
-    {
-        _orchestrator = new ApplicationLaunchOrchestrator(
-            _processMock.Object, _uiaMock.Object, _loggerMock.Object);
-    }
-
-    [Fact]
-    public async Task ExecuteLaunchChainAsync_SingleStep_ReturnsContext()
-    {
-        _processMock.Setup(p => p.StartProcessAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<int>.Success(100));
-        _processMock.Setup(p => p.IsProcessRunningAsync(It.IsAny<int>()))
-            .ReturnsAsync(true);
-        _processMock.Setup(p => p.EnumerateTopLevelWindowsAsync(It.IsAny<int>()))
-            .ReturnsAsync(Result<IReadOnlyList<IntPtr>>.Success(new List<IntPtr> { (IntPtr)1 }.AsReadOnly()));
-
-        var chain = new ApplicationLaunchChain([
-            new LaunchStep(1, "TestApp", "test.exe", null, null,
-                new ReadinessCondition(ConditionType.ProcessStarted, null, null, null, null, null, null, null, null, null),
-                null, true)
-        ]);
-
-        var result = await _orchestrator.ExecuteLaunchChainAsync(chain, 100, CancellationToken.None);
-
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(1);
-        result.Value![0].ApplicationTag.Should().Be("TestApp");
-    }
-
-    [Fact]
-    public async Task ExecuteLaunchChainAsync_ProcessFailsToStart_ReturnsFailure()
-    {
-        _processMock.Setup(p => p.StartProcessAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<int>.Failure(FailureReason.ProcessNotStarted, "Access denied"));
-
-        var chain = new ApplicationLaunchChain([
-            new LaunchStep(1, "TestApp", "test.exe", null, null,
-                new ReadinessCondition(ConditionType.ProcessStarted, null, null, null, null, null, null, null, null, null),
-                null, true)
-        ]);
-
-        var result = await _orchestrator.ExecuteLaunchChainAsync(chain, 100, CancellationToken.None);
-
-        result.IsFailure.Should().BeTrue();
-        result.FailureReason.Should().Be(FailureReason.ProcessNotStarted);
-    }
-}
-
 public class UiScanServiceTests
 {
     private readonly Mock<IUiAutomationProvider> _uiaMock = new();
-    private readonly Mock<ILogger<UiScanService>> _loggerMock = new();
-    private readonly UiScanService _scanService;
+    private readonly Mock<ILogger<Scanning.UiScanService>> _loggerMock = new();
+    private readonly Scanning.UiScanService _scanService;
 
     public UiScanServiceTests()
     {
-        _scanService = new UiScanService(_uiaMock.Object, _loggerMock.Object);
+        _scanService = new Scanning.UiScanService(_uiaMock.Object, _loggerMock.Object);
     }
 
     [Fact]

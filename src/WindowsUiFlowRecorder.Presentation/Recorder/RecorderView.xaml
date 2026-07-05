@@ -1,0 +1,128 @@
+<UserControl x:Class="WindowsUiFlowRecorder.Presentation.Recorder.RecorderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:WindowsUiFlowRecorder.Presentation.Recorder"
+             xmlns:converters="clr-namespace:WindowsUiFlowRecorder.Presentation.Shared.Converters">
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#2D2D30" Padding="10" CornerRadius="4">
+            <TextBlock Text="Flow Recorder" FontSize="18" FontWeight="Bold" Foreground="White"/>
+        </Border>
+
+        <Border Grid.Row="1" Margin="0,8,0,0" Background="#1E1E1E" Padding="8" CornerRadius="4"
+                Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding ErrorMessage}" Foreground="#FF4444" TextWrapping="Wrap"/>
+                <Button Grid.Column="1" Content="Dismiss" Command="{Binding DismissErrorCommand}"
+                        Background="#444" Foreground="White" BorderThickness="0" Margin="8,0,0,0" Padding="6,2"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="16" Margin="0,0,0,8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Controls" FontSize="14" FontWeight="SemiBold" Foreground="#CCC" Margin="0,0,0,8"/>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Content="Start Recording"
+                                Command="{Binding StartRecordingCommand}"
+                                Background="#007ACC" Foreground="White" BorderThickness="0"
+                                Padding="16,8" Margin="4" FontSize="13"
+                                Visibility="{Binding CanConfigure, Converter={StaticResource BoolToVis}}"/>
+
+                        <Button Content="Pause"
+                                Command="{Binding PauseCommand}"
+                                Background="#FF8C00" Foreground="White" BorderThickness="0"
+                                Padding="16,8" Margin="4" FontSize="13"/>
+
+                        <Button Content="Resume"
+                                Command="{Binding ResumeCommand}"
+                                Background="#28A745" Foreground="White" BorderThickness="0"
+                                Padding="16,8" Margin="4" FontSize="13"/>
+
+                        <Button Content="Stop"
+                                Command="{Binding StopCommand}"
+                                Background="#DC3545" Foreground="White" BorderThickness="0"
+                                Padding="16,8" Margin="4" FontSize="13"/>
+
+                        <Button Content="Export"
+                                Command="{Binding ExportCommand}"
+                                Background="#28A745" Foreground="White" BorderThickness="0"
+                                Padding="16,8" Margin="4" FontSize="13"/>
+
+                        <Button Content="New Session"
+                                Command="{Binding ResetCommand}"
+                                Background="#6C757D" Foreground="White" BorderThickness="0"
+                                Padding="16,8" Margin="4" FontSize="13"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="2" Margin="0,12,0,0" Background="#1E1E1E" Padding="10" CornerRadius="4">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Ellipse Width="12" Height="12" Fill="Red" Margin="0,0,8,0"
+                                     Visibility="{Binding State, Converter={x:Static local:RecorderView.StateToRecordingVisibility}}"/>
+                            <TextBlock Text="{Binding StatusMessage}" Foreground="#AAA" FontSize="14"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="1" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="16"
+                    Visibility="{Binding HasSessionSummary, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <TextBlock Text="Session Summary" FontSize="14" FontWeight="SemiBold" Foreground="#CCC" Margin="0,0,0,8"/>
+                    <TextBlock Grid.Row="1" Text="{Binding SessionSummaryText}" Foreground="#AAA" FontSize="13"
+                               TextWrapping="Wrap" FontFamily="Consolas"/>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2" BorderBrush="#333" BorderThickness="1" CornerRadius="4" Padding="16"
+                    Background="#1A1A1A" Margin="0,8,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="Instructions" FontSize="14" FontWeight="SemiBold" Foreground="#666" Margin="0,0,0,8"/>
+                    <TextBlock Grid.Row="1" Foreground="#555" FontSize="12" TextWrapping="Wrap">
+                        <Run Text="1. "/><Run Text="Select a target application profile" FontWeight="SemiBold" Foreground="#888"/><LineBreak/>
+                        <Run Text="2. "/><Run Text="Click" FontWeight="SemiBold" Foreground="#888"/><Run Text=" 'Start Recording' "/><Run Text="to begin" FontWeight="SemiBold" Foreground="#888"/><LineBreak/>
+                        <Run Text="3. "/><Run Text="Perform your manual test actions" FontWeight="SemiBold" Foreground="#888"/><LineBreak/>
+                        <Run Text="4. "/><Run Text="Click " Foreground="#888"/><Run Text="'Stop'" FontWeight="SemiBold" Foreground="#888"/><Run Text=" when done" Foreground="#888"/><LineBreak/>
+                        <Run Text="5. "/><Run Text="Review session summary and " Foreground="#888"/><Run Text="'Export'" FontWeight="SemiBold" Foreground="#888"/>
+                    </TextBlock>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="3" Background="#007ACC" Padding="8" CornerRadius="4" Margin="0,8,0,0">
+            <TextBlock Text="{Binding StatusMessage, StringFormat='Status: {0}'}" Foreground="White" FontSize="12"/>
+        </Border>
+    </Grid>
+</UserControl>

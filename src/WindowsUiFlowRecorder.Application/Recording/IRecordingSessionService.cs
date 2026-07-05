@@ -5,16 +5,18 @@ using WindowsUiFlowRecorder.Domain.Entities;
 
 public interface IRecordingSessionService
 {
-    Task<Result> StartSessionAsync(
-        ApplicationLaunchChain launchChain,
-        IReadOnlyList<TargetApplicationContext> contexts,
-        CancellationToken ct);
+    RecordingSessionState CurrentState { get; }
+    RecordingSession? CurrentSession { get; }
+    event Action<RecordingSessionState> StateChanged;
+    event Action<string> ErrorOccurred;
 
+    Task<Result> PrepareAsync(ApplicationLaunchChain launchChain, CancellationToken ct);
+    Task<Result> StartRecordingAsync(CancellationToken ct);
     Result PauseSession();
     Result ResumeSession();
-    Task<Result<RecordingSession>> StopSessionAsync();
+    Task<Result<RecordingSession>> StopSessionAsync(CancellationToken ct);
+    void ResetToIdle();
 
-    RecordingSessionState CurrentState { get; }
-    event Action<RecordingSessionState>? StateChanged;
     SessionListItem? GetSessionSummary();
+    Task<Result> ExportSessionAsync(string outputDirectory, CancellationToken ct);
 }

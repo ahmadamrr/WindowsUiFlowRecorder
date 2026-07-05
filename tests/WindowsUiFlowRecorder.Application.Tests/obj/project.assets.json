@@ -7500,11 +7500,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/mnt/d/Playground/Recorder/tests/WindowsUiFlowRecorder.Application.Tests/WindowsUiFlowRecorder.Application.Tests.csproj",
+      "projectUniqueName": "/mnt/d/Playground/WindowsUiFlowRecorder/tests/WindowsUiFlowRecorder.Application.Tests/WindowsUiFlowRecorder.Application.Tests.csproj",
       "projectName": "WindowsUiFlowRecorder.Application.Tests",
-      "projectPath": "/mnt/d/Playground/Recorder/tests/WindowsUiFlowRecorder.Application.Tests/WindowsUiFlowRecorder.Application.Tests.csproj",
+      "projectPath": "/mnt/d/Playground/WindowsUiFlowRecorder/tests/WindowsUiFlowRecorder.Application.Tests/WindowsUiFlowRecorder.Application.Tests.csproj",
       "packagesPath": "/home/koku/.nuget/packages/",
-      "outputPath": "/mnt/d/Playground/Recorder/tests/WindowsUiFlowRecorder.Application.Tests/obj/",
+      "outputPath": "/mnt/d/Playground/WindowsUiFlowRecorder/tests/WindowsUiFlowRecorder.Application.Tests/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/koku/.nuget/NuGet/NuGet.Config"
@@ -7519,14 +7519,14 @@
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "projectReferences": {
-            "/mnt/d/Playground/Recorder/src/WindowsUiFlowRecorder.Application/WindowsUiFlowRecorder.Application.csproj": {
-              "projectPath": "/mnt/d/Playground/Recorder/src/WindowsUiFlowRecorder.Application/WindowsUiFlowRecorder.Application.csproj"
+            "/mnt/d/Playground/WindowsUiFlowRecorder/src/WindowsUiFlowRecorder.Application/WindowsUiFlowRecorder.Application.csproj": {
+              "projectPath": "/mnt/d/Playground/WindowsUiFlowRecorder/src/WindowsUiFlowRecorder.Application/WindowsUiFlowRecorder.Application.csproj"
             },
-            "/mnt/d/Playground/Recorder/src/WindowsUiFlowRecorder.Infrastructure/WindowsUiFlowRecorder.Infrastructure.csproj": {
-              "projectPath": "/mnt/d/Playground/Recorder/src/WindowsUiFlowRecorder.Infrastructure/WindowsUiFlowRecorder.Infrastructure.csproj"
+            "/mnt/d/Playground/WindowsUiFlowRecorder/src/WindowsUiFlowRecorder.Infrastructure/WindowsUiFlowRecorder.Infrastructure.csproj": {
+              "projectPath": "/mnt/d/Playground/WindowsUiFlowRecorder/src/WindowsUiFlowRecorder.Infrastructure/WindowsUiFlowRecorder.Infrastructure.csproj"
             },
-            "/mnt/d/Playground/Recorder/src/WindowsUiFlowRecorder.Presentation/WindowsUiFlowRecorder.Presentation.csproj": {
-              "projectPath": "/mnt/d/Playground/Recorder/src/WindowsUiFlowRecorder.Presentation/WindowsUiFlowRecorder.Presentation.csproj"
+            "/mnt/d/Playground/WindowsUiFlowRecorder/src/WindowsUiFlowRecorder.Presentation/WindowsUiFlowRecorder.Presentation.csproj": {
+              "projectPath": "/mnt/d/Playground/WindowsUiFlowRecorder/src/WindowsUiFlowRecorder.Presentation/WindowsUiFlowRecorder.Presentation.csproj"
             }
           }
         }
