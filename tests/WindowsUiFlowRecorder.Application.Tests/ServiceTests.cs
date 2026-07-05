@@ -186,7 +186,63 @@ public class ExportServiceTests
     }
 
     [Fact]
-    public async Task ExportStandaloneScanAsync_WritesExport()
+    public async Task ExportSessionAsync_WithValidSession_WritesExport()
+    {
+        _writerMock.Setup(w => w.WriteExportAsync(
+                It.IsAny<ExportPackage>(), It.IsAny<string>(),
+                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
+
+        var session = CreateTestSession();
+
+        var result = await _exportService.ExportSessionAsync(session, "/tmp/export", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _writerMock.Verify(w => w.WriteExportAsync(
+            It.IsAny<ExportPackage>(), It.IsAny<string>(),
+            It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExportSessionAsync_ScreenshotReferences_ArePassedToWriter()
+    {
+        _writerMock.Setup(w => w.WriteExportAsync(
+                It.IsAny<ExportPackage>(), It.IsAny<string>(),
+                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
+
+        var session = CreateTestSession();
+        var screenshot = new ScreenshotReference(
+            Guid.NewGuid(), "0001_full.png", ScreenshotScope.FullScreen,
+            ScreenshotFormat.PNG, 1920, 1080, DateTime.UtcNow,
+            session.Actions[0].ActionId, null, "/tmp/screenshot.png");
+        session.Screenshots.Add(screenshot);
+
+        var result = await _exportService.ExportSessionAsync(session, "/tmp/export", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _writerMock.Verify(w => w.WriteExportAsync(
+            It.IsAny<ExportPackage>(), It.IsAny<string>(),
+            It.Is<IReadOnlyList<ScreenshotReference>>(list => list.Count == 1),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExportSessionAsync_InvalidSchemaVersion_ReturnsFailure()
+    {
+        var session = CreateTestSession();
+        var package = new ExportPackage(
+            "0.5.0", "0.1.0", DateTime.UtcNow,
+            ExportKind.RecordingSession, null, null);
+
+        var result = await _exportService.ExportSessionAsync(session, "/tmp/export", CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.FailureReason.Should().Be(FailureReason.ExportValidationFailed);
+    }
+
+    [Fact]
+    public async Task ExportStandaloneScanAsync_WithValidData_WritesExport()
     {
         _writerMock.Setup(w => w.WriteExportAsync(
                 It.IsAny<ExportPackage>(), It.IsAny<string>(),
@@ -200,6 +256,48 @@ public class ExportServiceTests
         _writerMock.Verify(w => w.WriteExportAsync(
             It.IsAny<ExportPackage>(), It.IsAny<string>(),
             It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExportStandaloneScanAsync_WithoutSnapshot_StillProducesValidPackage()
+    {
+        _writerMock.Setup(w => w.WriteExportAsync(
+                It.IsAny<ExportPackage>(), It.IsAny<string>(),
+                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
+
+        var snapshot = CreateTestSnapshot();
+        var result = await _exportService.ExportStandaloneScanAsync(snapshot, "/tmp/export", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    private static RecordingSession CreateTestSession()
+    {
+        var session = new RecordingSession
+        {
+            SessionId = Guid.NewGuid(),
+            Name = "Test Session",
+            CreatedAtUtc = DateTime.UtcNow,
+            StartedAtUtc = DateTime.UtcNow.AddMinutes(-5),
+            StoppedAtUtc = DateTime.UtcNow,
+            State = RecordingSessionState.Stopped,
+            TargetApplicationContexts =
+            [
+                new TargetApplicationContext("TestApp", "test.exe", 12345, 1,
+                    DateTime.UtcNow.AddMinutes(-5), true, null, TargetTerminationReason.NotTerminated)
+            ]
+        };
+
+        session.Actions.Add(new RecordedAction(
+            Guid.NewGuid(), 1, DateTime.UtcNow.AddMinutes(-4),
+            ActionType.Click, "TestApp", Guid.NewGuid(),
+            new ElementInfo("btn1", "button1", "OK", "Button", null, null, null,
+                true, false, false, new BoundingRectangle(100, 100, 50, 20),
+                ["Invoke"], null, 1, []),
+            [], new ScreenPoint(120, 110), null, null, null, null, null));
+
+        return session;
     }
 
     private static WindowSnapshot CreateTestSnapshot() => new(

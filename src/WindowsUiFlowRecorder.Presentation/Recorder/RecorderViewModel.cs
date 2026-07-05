@@ -255,15 +255,28 @@ public class RecorderViewModel : ViewModelBase
     {
         try
         {
-            var exportDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                $"Export_{DateTime.UtcNow:yyyyMMdd_HHmmss}");
+            var dialog = new Microsoft.Win32.OpenFolderDialog
+            {
+                Title = "Select Export Destination",
+                DefaultDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            var exportDir = dialog.FolderName;
+            if (string.IsNullOrWhiteSpace(exportDir))
+                return;
 
             var result = await _sessionService.ExportSessionAsync(exportDir, CancellationToken.None);
             if (!result.IsSuccess)
             {
                 HasError = true;
                 ErrorMessage = $"Export failed: {result.ErrorMessage}";
+            }
+            else
+            {
+                StatusMessage = $"Session exported to {exportDir}";
             }
         }
         catch (Exception ex)

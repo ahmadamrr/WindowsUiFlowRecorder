@@ -40,8 +40,8 @@
     },
     "7": {
       "name": "Export Pipeline",
-      "status": "partial",
-      "notes": "ExportPackage, ExportService, ExportWriter exist; screenshots now wired via capture pipeline; schema self-validation still missing"
+      "status": "completed",
+      "notes": "Schema self-validation (semver checks, null checks, MAJOR >= 1) in ExportService before write; screenshot references properly collected from session and passed to ExportWriter; relative paths include 'screenshots/' prefix per DataModel.md; folder picker dialog for export destination; Screenshots collection added to RecordingSession; re-export support; schema-validation automated tests; TerminationReason properly determined"
     },
     "8": {
       "name": "Smart UI Scanner",

@@ -513,8 +513,12 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                 var screenshotResult = await _screenshotCapturer.CaptureFullScreenAsync(workingFolder, ct);
                 if (screenshotResult.IsSuccess)
                 {
-                    var updatedAction = action with { ScreenshotId = screenshotResult.Value.ScreenshotId };
-                    action = updatedAction;
+                    var screenshotRef = screenshotResult.Value with { AssociatedActionId = action.ActionId };
+                    action = action with { ScreenshotId = screenshotRef.ScreenshotId };
+                    lock (_lock)
+                    {
+                        _session!.Screenshots.Add(screenshotRef);
+                    }
                 }
             }
 

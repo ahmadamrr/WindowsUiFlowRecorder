@@ -12,6 +12,7 @@ public class RecordingSession
     public List<TargetApplicationContext> TargetApplicationContexts { get; init; } = [];
     public List<RecordedAction> Actions { get; init; } = [];
     public Dictionary<Guid, WindowSnapshot> Windows { get; init; } = [];
+    public List<ScreenshotReference> Screenshots { get; init; } = [];
     public DateTime CreatedAtUtc { get; init; }
     public DateTime? StartedAtUtc { get; set; }
     public DateTime? StoppedAtUtc { get; set; }
