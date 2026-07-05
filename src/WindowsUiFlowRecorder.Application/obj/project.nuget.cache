@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "c7nPgwnoOtY=",
+  "success": true,
+  "projectFilePath": "/mnt/d/Playground/Recorder/src/WindowsUiFlowRecorder.Application/WindowsUiFlowRecorder.Application.csproj",
+  "expectedPackageFiles": [
+    "/home/koku/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/10.0.9/microsoft.extensions.dependencyinjection.abstractions.10.0.9.nupkg.sha512",
+    "/home/koku/.nuget/packages/microsoft.extensions.logging.abstractions/10.0.9/microsoft.extensions.logging.abstractions.10.0.9.nupkg.sha512",
+    "/home/koku/.nuget/packages/system.diagnostics.diagnosticsource/10.0.9/system.diagnostics.diagnosticsource.10.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}

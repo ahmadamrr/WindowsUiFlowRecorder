@@ -1,0 +1,100 @@
+<Window x:Class="AutomationTestHarness.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Automation Test Harness"
+        Height="400" Width="600"
+        WindowStartupLocation="CenterScreen"
+        AutomationProperties.AutomationId="MainWindow">
+    <Grid Margin="10" AutomationProperties.AutomationId="MainGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#2D2D30" Padding="8" CornerRadius="4">
+            <TextBlock x:Name="TitleText" Text="Automation Test Harness v1.0"
+                       FontSize="14" FontWeight="Bold" Foreground="White"
+                       AutomationProperties.AutomationId="TitleText"/>
+        </Border>
+
+        <StackPanel Grid.Row="1" Margin="0,10,0,5">
+            <TextBlock Text="Status:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+            <Border Background="#E8E8E8" Padding="8" CornerRadius="3">
+                <TextBlock x:Name="StatusLabel"
+                           x:FieldModifier="public"
+                           Text="Disconnected"
+                           FontSize="16" FontWeight="Bold"
+                           Foreground="#CC0000"
+                           AutomationProperties.AutomationId="lblHsmStatus"/>
+            </Border>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Margin="0,5" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button x:Name="ConnectButton"
+                    Content="Simulate HSM Connect"
+                    Width="180" Height="32" Margin="5"
+                    AutomationProperties.AutomationId="btnConnect"
+                    Click="ConnectButton_Click"/>
+            <Button x:Name="CrashButton"
+                    Content="Crash Now"
+                    Width="120" Height="32" Margin="5"
+                    AutomationProperties.AutomationId="btnCrash"
+                    Click="CrashButton_Click"/>
+        </StackPanel>
+
+        <GroupBox Grid.Row="3" Header="Control Generation" Margin="0,5" Padding="5">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBox x:Name="ControlCountBox"
+                         Text="100" Width="60" Height="28" Margin="5"
+                         AutomationProperties.AutomationId="txtControlCount"/>
+                <Button x:Name="GenerateButton"
+                        Content="Generate Controls" Width="140" Height="32" Margin="5"
+                        AutomationProperties.AutomationId="btnGenerate"
+                        Click="GenerateButton_Click"/>
+                <Button x:Name="MutateButton"
+                        Content="Mutate UI" Width="120" Height="32" Margin="5"
+                        AutomationProperties.AutomationId="btnMutate"
+                        Click="MutateButton_Click"/>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox Grid.Row="4" Header="Instance Configuration" Margin="0,5" Padding="5">
+            <StackPanel>
+                <TextBlock x:Name="InstanceLabel"
+                           x:FieldModifier="public"
+                           Text="Instance: Primary"
+                           FontSize="12"
+                           AutomationProperties.AutomationId="lblInstance"/>
+                <TextBlock x:Name="ArgsLabel"
+                           x:FieldModifier="public"
+                           Text=""
+                           FontSize="10" Foreground="Gray"
+                           AutomationProperties.AutomationId="lblArgs"/>
+            </StackPanel>
+        </GroupBox>
+
+        <ScrollViewer Grid.Row="5" Margin="0,5" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="GeneratedControlsPanel"
+                          AutomationProperties.AutomationId="GeneratedControls">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+            <Button x:Name="AutoConnectTimerBtn"
+                    Content="Toggle Auto-Connect (5s)"
+                    Width="180" Height="32" Margin="5"
+                    AutomationProperties.AutomationId="btnAutoConnect"
+                    Click="AutoConnectButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
