@@ -2,6 +2,19 @@
 
 **This is a greenfield documentation-only repo.** No source code, no build files, no CI/CD exist yet. All specs are in `docs/`.
 
+## Progress tracking (cross-workstation)
+
+- **Central source of truth:** `.opencode/progress.json` — tracks phase completion status, updated after each phase milestone.
+- This file is committed to git, so it follows the repo across workstations (local PC, VPS, etc.).
+- **Always read this file first** when starting work to understand the current state.
+- When a phase is completed, update `.opencode/progress.json` and commit + push.
+
+## Commit & push convention
+
+- After each phase milestone is reached, commit all changes and push to origin.
+- Git user and remote are configured project-local in `.git/config`.
+- Do **not** commit `bin/`, `obj/`, or other build artifacts (`.gitignore` is configured).
+
 ## Source of truth hierarchy
 
 - `docs/PRD.md` — requirements (master, resolve conflicts here first)

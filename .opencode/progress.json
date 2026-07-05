@@ -1,0 +1,62 @@
+{
+  "project": "Windows UI Flow Recorder & Smart UI Scanner",
+  "updatedAtUtc": "2026-07-05T22:30:00Z",
+  "currentPhase": 6,
+  "phases": {
+    "0": {
+      "name": "Foundation & Project Skeleton",
+      "status": "completed",
+      "notes": "Solution structure, DI wiring, logging, architecture compliance tests"
+    },
+    "1": {
+      "name": "Domain & Application Contracts",
+      "status": "completed",
+      "notes": "All entities, policies, interfaces, service skeletons, domain tests"
+    },
+    "2": {
+      "name": "UIA Adapter & Single-Application Launch",
+      "status": "completed",
+      "notes": "FlaUiAutomationProvider, ProcessLaunchMonitor, AutomationTestHarness"
+    },
+    "3": {
+      "name": "Launch Chain Orchestrator",
+      "status": "completed",
+      "notes": "ApplicationLaunchOrchestrator, 5 readiness condition types, profile repo, integration tests"
+    },
+    "4": {
+      "name": "Input Capture & Correlation",
+      "status": "completed",
+      "notes": "GlobalInputHook (Win32 hooks), ActionCoalescingPolicy wired, integration tests"
+    },
+    "5": {
+      "name": "Hierarchy & Screenshot Capture",
+      "status": "partial",
+      "notes": "WalkHierarchyAsync walker and ScreenshotCapturer exist; structural fingerprinting not wired to HierarchyRecapturePolicy; performance benchmarks untested"
+    },
+    "6": {
+      "name": "Recording Session Orchestration + Recorder UI",
+      "status": "in_progress",
+      "notes": "RecordingSessionService state machine skeleton exists; NO WPF Views/ViewModels, no overlay, no event wiring from hooks"
+    },
+    "7": {
+      "name": "Export Pipeline",
+      "status": "partial",
+      "notes": "ExportPackage, ExportService, ExportWriter exist; screenshots never wired (empty list); no self-validation"
+    },
+    "8": {
+      "name": "Smart UI Scanner",
+      "status": "partial",
+      "notes": "UiScanService thin wrapper exists; NO Scanner UI, no search/filter, no on-screen highlight"
+    },
+    "9": {
+      "name": "Session/Profile Management + Settings",
+      "status": "partial",
+      "notes": "Services and JSON repos exist; NO Settings/Profile/Session-list UI"
+    },
+    "10": {
+      "name": "Hardening & Acceptance",
+      "status": "pending",
+      "notes": "Not started"
+    }
+  }
+}
