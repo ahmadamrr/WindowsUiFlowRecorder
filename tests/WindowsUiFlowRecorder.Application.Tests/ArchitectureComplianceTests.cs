@@ -5,46 +5,78 @@ using FluentAssertions;
 
 public class ArchitectureComplianceTests
 {
+    private static readonly string[] NetworkNamespaces =
+    [
+        "System.Net",
+        "System.Net.Http",
+        "System.Net.Sockets",
+        "System.Net.WebSockets",
+        "Microsoft.AspNetCore",
+        "Microsoft.AspNetCore.SignalR",
+        "Grpc",
+        "RestSharp",
+        "Flurl",
+        "Refit",
+        "SocketIOClient"
+    ];
+
+    private static readonly string[] FlaUiNamespaces =
+    [
+        "FlaUI.Core",
+        "FlaUI.UIA3",
+        "Interop.UIAutomationClient"
+    ];
+
+    private static readonly string[] WpfNamespaces =
+    [
+        "PresentationFramework",
+        "System.Windows",
+        "WindowsBase",
+        "System.Xaml"
+    ];
+
     [Fact]
     public void Domain_HasNoUnsolicitedDependencies()
     {
         var assembly = typeof(Domain.Common.Result).Assembly;
-        var refs = assembly.GetReferencedAssemblies()
-            .Select(a => a.Name)
-            .Where(n => n != null)
-            .ToList();
+        var refs = GetAssemblyNames(assembly);
 
-        refs.Should().NotContain("FlaUI.Core");
-        refs.Should().NotContain("FlaUI.UIA3");
+        refs.Should().NotContain(FlaUiNamespaces);
         refs.Should().NotContain("WindowsUiFlowRecorder.Application");
         refs.Should().NotContain("WindowsUiFlowRecorder.Infrastructure");
         refs.Should().NotContain("WindowsUiFlowRecorder.Presentation");
     }
 
     [Fact]
+    public void Domain_HasNoNetworkDependencies()
+    {
+        var assembly = typeof(Domain.Common.Result).Assembly;
+        var refs = GetAssemblyNames(assembly);
+        refs.Should().NotContain(NetworkNamespaces, "Domain must not reference any networking namespace");
+    }
+
+    [Fact]
     public void Application_DoesNotReferenceFlaUI()
     {
         var assembly = typeof(Application.Recording.IRecordingSessionService).Assembly;
-        var refs = assembly.GetReferencedAssemblies()
-            .Select(a => a.Name)
-            .ToList();
-
-        refs.Should().NotContain("FlaUI.Core");
-        refs.Should().NotContain("FlaUI.UIA3");
-        refs.Should().NotContain("Interop.UIAutomationClient");
+        var refs = GetAssemblyNames(assembly);
+        refs.Should().NotContain(FlaUiNamespaces);
     }
 
     [Fact]
     public void Application_DoesNotReferenceWpfNamespaces()
     {
         var assembly = typeof(Application.Recording.IRecordingSessionService).Assembly;
-        var refs = assembly.GetReferencedAssemblies()
-            .Select(a => a.Name)
-            .ToList();
+        var refs = GetAssemblyNames(assembly);
+        refs.Should().NotContain(WpfNamespaces);
+    }
 
-        refs.Should().NotContain("PresentationFramework");
-        refs.Should().NotContain("System.Windows");
-        refs.Should().NotContain("WindowsBase");
+    [Fact]
+    public void Application_HasNoNetworkDependencies()
+    {
+        var assembly = typeof(Application.Recording.IRecordingSessionService).Assembly;
+        var refs = GetAssemblyNames(assembly);
+        refs.Should().NotContain(NetworkNamespaces, "Application must not reference any networking namespace");
     }
 
     [Fact]
@@ -66,21 +98,77 @@ public class ArchitectureComplianceTests
     }
 
     [Fact]
+    public void Infrastructure_HasNoNetworkDependencies()
+    {
+        var assembly = typeof(Infrastructure.Automation.FlaUiAutomationProvider).Assembly;
+        var refs = GetAssemblyNames(assembly);
+        refs.Should().NotContain(NetworkNamespaces, "Infrastructure must not reference any networking namespace");
+    }
+
+    [Fact]
     public void DependencyDirection_DomainHasNoOutgoingProjectRefs()
     {
-        var domainTypes = new[]
-        {
-            typeof(Domain.Entities.RecordingSession),
-            typeof(Domain.Policies.ActionCoalescingPolicy),
-            typeof(Domain.Abstractions.ISessionRepository),
-            typeof(Domain.Common.Result)
-        };
-
         var domainAssembly = typeof(Domain.Common.Result).Assembly;
-        var refs = domainAssembly.GetReferencedAssemblies().Select(a => a.Name).ToList();
+        var refs = GetAssemblyNames(domainAssembly);
 
         refs.Should().NotContain("WindowsUiFlowRecorder.Application");
         refs.Should().NotContain("WindowsUiFlowRecorder.Infrastructure");
         refs.Should().NotContain("WindowsUiFlowRecorder.Presentation");
     }
+
+    [Fact]
+    public void Presentation_HasNoNetworkDependencies()
+    {
+        var assembly = typeof(Presentation.App).Assembly;
+        var refs = GetAssemblyNames(assembly);
+        refs.Should().NotContain(NetworkNamespaces, "Presentation must not reference any networking namespace");
+    }
+
+    [Fact]
+    public void AllLayers_FlaUiDoesNotLeakUpward()
+    {
+        var domainAssembly = typeof(Domain.Common.Result).Assembly;
+        var appAssembly = typeof(Application.Recording.IRecordingSessionService).Assembly;
+        var presAssembly = typeof(Presentation.App).Assembly;
+
+        var domainRefs = GetAssemblyNames(domainAssembly);
+        var appRefs = GetAssemblyNames(appAssembly);
+        var presRefs = GetAssemblyNames(presAssembly);
+
+        domainRefs.Should().NotContain(FlaUiNamespaces);
+        appRefs.Should().NotContain(FlaUiNamespaces);
+        presRefs.Should().NotContain(FlaUiNamespaces);
+    }
+
+    [Fact]
+    public void AllLayers_StrictDependencyDirection()
+    {
+        var domainAssembly = typeof(Domain.Common.Result).Assembly;
+        var appAssembly = typeof(Application.Recording.IRecordingSessionService).Assembly;
+        var infraAssembly = typeof(Infrastructure.Automation.FlaUiAutomationProvider).Assembly;
+        var presAssembly = typeof(Presentation.App).Assembly;
+
+        var domainRefs = GetAssemblyNames(domainAssembly);
+        var appRefs = GetAssemblyNames(appAssembly);
+        var infraRefs = GetAssemblyNames(infraAssembly);
+        var presRefs = GetAssemblyNames(presAssembly);
+
+        domainRefs.Should().NotContain("WindowsUiFlowRecorder.Application");
+        domainRefs.Should().NotContain("WindowsUiFlowRecorder.Infrastructure");
+        domainRefs.Should().NotContain("WindowsUiFlowRecorder.Presentation");
+
+        appRefs.Should().NotContain("WindowsUiFlowRecorder.Infrastructure");
+        appRefs.Should().NotContain("WindowsUiFlowRecorder.Presentation");
+
+        infraRefs.Should().Contain("WindowsUiFlowRecorder.Application");
+        infraRefs.Should().NotContain("WindowsUiFlowRecorder.Presentation");
+
+        presRefs.Should().Contain("WindowsUiFlowRecorder.Application");
+        presRefs.Should().Contain("WindowsUiFlowRecorder.Infrastructure");
+    }
+
+    private static List<string?> GetAssemblyNames(Assembly assembly)
+        => assembly.GetReferencedAssemblies()
+            .Select(a => a.Name)
+            .ToList();
 }

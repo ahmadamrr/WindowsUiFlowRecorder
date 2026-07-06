@@ -55,8 +55,8 @@
     },
     "10": {
       "name": "Hardening & Acceptance",
-      "status": "pending",
-      "notes": "Not started"
+      "status": "completed",
+      "notes": "Enhanced architecture compliance tests: 11 tests covering all 4 layers — network namespace scanning (System.Net, System.Net.Http, System.Net.Sockets, etc.), FlaUI leakage, WPF leakage, strict dependency direction, interface implementation verification. SessionEdgeCaseTests (10 tests): launch failure → LaunchFailed, double-start rejection, pause-resume cycle, stop-without-start, export-without-session, ResetToIdle state cleanup, summary counts, state change events. Publish script (publish.sh) producing self-contained win-x64 single-file build with architecture test gate."
     }
   }
 }
