@@ -12,239 +12,410 @@ This project replaces that manual discovery loop with two integrated capabilitie
 
 | Component | Purpose |
 |---|---|
-| **Flow Recorder** | Attaches to a running target application (or launches one), watches the tester perform a manual test case, and records every user action (clicks, keystrokes, focus changes) together with full UI Automation metadata for the control involved, a screenshot, and the active window's automation tree snapshot. |
-| **Smart UI Scanner** | On demand, walks the full UI Automation tree of a selected window/application and exports a structured snapshot of every control, its properties, and its hierarchy — independent of any recording session. |
+| **Flow Recorder** | Launches target applications (including multi-step launch chains), watches the tester perform a manual test case, and records every user action (clicks, keystrokes, focus changes) together with full UI Automation metadata, screenshots, and window hierarchy snapshots. |
+| **Smart UI Scanner** | On demand, walks the full UI Automation tree of a selected window/application, displays a searchable hierarchy tree, and exports a structured snapshot — independent of any recording session. |
 
 The output of both components is **structured JSON**, designed to be the deterministic, machine-readable input for a *future* AI-assisted Page Object / FlaUI code generator. **No AI, cloud, or network dependency is part of this project.** Everything runs fully offline on the tester's Windows machine.
 
-This documentation set is the **single source of truth** for the system. Every other document, and any future implementation work (human or AI-agent-driven), must be consistent with what is defined here.
-
 ---
 
-## 2. Why This Exists (Problem Context)
+## 2. MVP Features
 
-Our QA organization builds FlaUI-based UI automation (C#, Visual Studio, UIA3) against multi-process Windows desktop products. A representative real-world case: a product suite consisting of a **Proxy App** that must be launched first to establish a connection to a **Hardware Security Module (HSM)**, followed by an **eAdmin App** that depends on that Proxy connection being alive. Testing and automating flows like this requires a tester to:
+### Flow Recorder (Phases 0-7)
 
-1. Manually execute the test case end-to-end (launch Proxy → confirm HSM connection → launch eAdmin → perform actions).
-2. Separately re-discover every control touched, using `Inspect.exe`, across **both** application processes.
-3. Hand-assemble Page Objects and FlaUI code from notes and screenshots.
-
-This is slow, error-prone, and does not scale as the number of flows and applications grows. The Flow Recorder and Smart UI Scanner directly target this workflow, including multi-process flows where recording must survive the tester switching between application windows/processes mid-session (see `UseCases.md`, UC-09).
-
----
-
-## 3. Documentation Index
-
-| Document | Contents |
+| Feature | Status |
 |---|---|
-| [`PRD.md`](./PRD.md) | Product vision, personas, goals/non-goals, functional & non-functional requirements, release plan, acceptance criteria |
-| [`Architecture.md`](./Architecture.md) | Clean Architecture layering, solution/project structure, dependency graph, data flow, sequence & component diagrams |
-| [`SystemDesign.md`](./SystemDesign.md) | Detailed subsystem design: recording engine, event capture pipeline, UIA tree walker, screenshot service, export pipeline, state machines |
-| [`DataModel.md`](./DataModel.md) | Every shared DTO/model: properties, types, responsibilities, relationships |
-| [`UseCases.md`](./UseCases.md) | Actor-level use cases with preconditions, main/alternate flows, postconditions |
-| [`TestingStrategy.md`](./TestingStrategy.md) | Unit/integration/mocking/performance approach, coverage goals, regression strategy |
-| [`Roadmap.md`](./Roadmap.md) | Phased delivery plan with goals, deliverables, dependencies, complexity, risks per phase |
-| [`RiskAnalysis.md`](./RiskAnalysis.md) | Risk register: technical, product, and operational risks with mitigations |
-| [`FutureEnhancements.md`](./FutureEnhancements.md) | Explicitly out-of-scope-for-MVP ideas (AI generation, cloud sync, self-healing locators, etc.) |
-| [`CodingGuidelines.md`](./CodingGuidelines.md) | Naming conventions, layering rules, DI/logging/testing conventions, review checklist |
+| **Target Application Profiles** — save and reuse application launch configurations | ✅ |
+| **Launch Chain** — configure Primary + Dependent applications with Readiness Conditions (process-started, window-appeared, control-present, control-property-equals, fixed-timeout) | ✅ |
+| **Start/Pause/Resume/Stop** recording with full state machine (Idle → Configuring → LaunchingChain → Recording → Paused → Stopped → Reviewing → Exporting → Exported) | ✅ |
+| **Global Input Capture** — low-level Win32 mouse/keyboard hooks, thread-safe producer/consumer queue | ✅ |
+| **Action Coalescing** — drag gestures, text entry, duplicate window activations collapsed into meaningful discrete actions | ✅ |
+| **UIA Element Correlation** — element lookup by point (clicks) and by focus (keyboard), process-id scoped to active target contexts | ✅ |
+| **Window Hierarchy Capture** — depth-first UIA tree walk with configurable max-element safety limit (default 5,000) | ✅ |
+| **Structural Fingerprinting** — SHA-256 hashing of ControlType/AutomationId/depth to detect structural changes | ✅ |
+| **Re-capture on Change** — windows are re-captured when the fingerprint changes (subject to configurable sensitivity: Low=2s, Medium=500ms, High=100ms intervals) | ✅ |
+| **Screenshot Capture** — full-screen, window-bounded, or element-bounded PNG screenshots at configurable granularity | ✅ |
+| **Always-on-top Recording Overlay** — blinking red indicator with paused state (orange) | ✅ |
+| **Input Hook Heartbeat** — detects if the OS silently disables the hook and warns the tester | ✅ |
+| **Target Process Crash Detection** — auto-stops the session if all target processes exit | ✅ |
+| **Export Pipeline** — versioned ExportPackage JSON + screenshots folder with schema self-validation | ✅ |
+| **Folder Picker** — choose export destination via OS folder dialog | ✅ |
+| **Re-export** — export the same session multiple times to different locations | ✅ |
 
----
+### Smart UI Scanner (Phase 8)
 
-## 4. Technology Stack (Authoritative)
-
-| Concern | Choice |
+| Feature | Status |
 |---|---|
-| Language | C# (latest, aligned to .NET 8) |
-| Runtime | .NET 8 |
-| UI Framework | WPF, MVVM pattern |
-| UI Automation | FlaUI (UIA3 backend) |
-| Architecture Style | Clean Architecture |
-| Dependency Injection | `Microsoft.Extensions.DependencyInjection` |
-| Logging | `Microsoft.Extensions.Logging` |
-| Serialization | `System.Text.Json` |
-| Unit/Integration Testing | xUnit, FluentAssertions, Moq |
+| **Process Picker** — enumerate running processes with visible windows | ✅ |
+| **On-demand Hierarchy Scan** — full UIA tree walk of any window | ✅ |
+| **Search/Filter Tree** — filter by AutomationId, Name, ControlType, ClassName with live parent visibility propagation | ✅ |
+| **Element Details Panel** — AutomationId, Name, ControlType, ClassName, bounding rectangle, patterns, children count, enabled/offscreen/focusable state | ✅ |
+| **On-screen Highlight** — transparent red-border overlay positioned over the selected element | ✅ |
+| **Standalone Export** — export scan results as standalone ExportPackage JSON using the shared schema | ✅ |
 
-> Note: this stack (.NET 8 / WPF tool) is the stack for the **recorder/scanner tool itself**. It is independent of, and does not replace, the tester's existing FlaUI test projects (which may target .NET Framework 4.8, as is common for legacy enterprise desktop test suites). The recorder is a standalone authoring tool whose *output* (JSON) is designed to be consumable from any FlaUI project regardless of target framework.
+### Session & Profile Management (Phase 9)
+
+| Feature | Status |
+|---|---|
+| **Session History** — list all recorded sessions with metadata (date, duration, action/window/screenshot counts) | ✅ |
+| **Rename & Annotate** — edit session name and notes | ✅ |
+| **Delete Sessions** — remove old session data | ✅ |
+| **Profile Manager** — view, edit name/description, save | ✅ |
+| **Duplicate Profiles** — clone existing profiles with a new name | ✅ |
+| **Delete Profiles** — remove unused profiles | ✅ |
+| **Settings** — screenshot mode, hierarchy sensitivity, default export directory, readiness timeout/poll interval, max hierarchy elements, verbose logging | ✅ |
+
+### Architecture Compliance (Phase 10)
+
+| Feature | Status |
+|---|---|
+| **No Network Access** — automated tests scan all 4 layers for System.Net/Http/Sockets namespaces | ✅ |
+| **Clean Architecture Direction** — Domain→Application→Infrastructure, Presentation only references Infrastructure in composition root | ✅ |
+| **No FlaUI Leakage** — FlaUI types never appear in Domain, Application, or Presentation | ✅ |
+| **One-class-per-file** — enforced by convention | ✅ |
+| **Nullable Reference Types** — enabled solution-wide with build errors | ✅ |
 
 ---
 
-## 5. MVP Scope Boundary
-
-**In scope (MVP):**
-- Flow Recorder (attach/launch target, record actions, capture metadata/screenshots/hierarchy, export JSON)
-- Smart UI Scanner (on-demand full tree snapshot export)
-- Fully offline operation
-- Structured JSON export as the terminal artifact
-
-**Explicitly out of scope (MVP):** AI-assisted code generation, cloud sync/storage, team collaboration features, self-healing locators, cross-machine session replay. See `FutureEnhancements.md`.
-
----
-
-## 6. How to Read This Documentation Set
-
-Start with `PRD.md` to understand *why* and *for whom*. Read `Architecture.md` and `SystemDesign.md` to understand *how the system is structured*. Read `DataModel.md` before touching any export/serialization logic — it is the contract the whole system is built around. Read `UseCases.md` and `TestingStrategy.md` before implementing or testing any feature. `Roadmap.md` and `RiskAnalysis.md` frame delivery sequencing and known risk areas. `CodingGuidelines.md` governs all code review.
-
----
-
-## 7. Build, Run & Test
+## 3. Quick Start
 
 ### Prerequisites
 
+- **Windows 10/11** (required for WPF, FlaUI/UIA3, Win32 hooks, screenshots)
 - [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
-- **Windows 10/11** with .NET 8 Desktop Runtime (for running — FlaUI, WPF, Win32 hooks, screenshots require the Windows Desktop runtime)
-- The solution compiles on Linux (via `EnableWindowsTargeting`) but tests targeting `net8.0-windows` require Windows to execute. Domain tests (`net8.0`) run on any platform.
+- The solution compiles on Linux (via `EnableWindowsTargeting`) but only Domain tests run there
 
 ### Build
 
 ```shell
-# Restore and build all 8 projects (4 src + 4 tests)
+# Full solution (all 4 src projects + 4 test projects)
 dotnet build
 
-# Build a single layer
-dotnet build src/WindowsUiFlowRecorder.Domain
-dotnet build src/WindowsUiFlowRecorder.Application
-dotnet build src/WindowsUiFlowRecorder.Infrastructure
+# Single layer
 dotnet build src/WindowsUiFlowRecorder.Presentation
 ```
 
 ### Run
 
 ```shell
-# Run the console app — verifies DI wiring and all layer services load
 dotnet run --project src/WindowsUiFlowRecorder.Presentation
 ```
 
-On Windows, replace the Presentation layer's `ConsoleApp` entry point with the WPF shell (`MainWindow.xaml` + `App.xaml`) and add `FlaUI.UIA3` to the Infrastructure project for real automation support.
+This launches the WPF application with 5 tabs:
+1. **Flow Recorder** — target selection, recording controls, session summary
+2. **Smart UI Scanner** — process picker, hierarchy tree, element details
+3. **Session History** — list, rename, annotate, delete sessions
+4. **Application Profiles** — view, edit, duplicate, delete profiles
+5. **Settings** — screenshot mode, sensitivity, timeouts, export directory
 
-### Test
+### Deploy (self-contained build)
 
-```shell
-# Run Domain tests (works on any platform - 14 tests)
-dotnet test tests/WindowsUiFlowRecorder.Domain.Tests
-
-# Run all tests (requires Windows Desktop Runtime)
-dotnet test
-
-# Run Infrastructure integration tests (requires Windows + Automation Test Harness)
-dotnet test tests/WindowsUiFlowRecorder.Infrastructure.Tests
-
-# Run with verbose output
-dotnet test --verbosity detailed
-```
-
-**Platform note:** Domain tests (`net8.0`) run on Linux and Windows.  
-Projects targeting `net8.0-windows` (Application.Tests, Infrastructure.Tests, Presentation.Tests) require the Windows Desktop Runtime to execute, but compile on any platform via `EnableWindowsTargeting`.
-
-### Solution structure
-
-```
-WindowsUiFlowRecorder.sln
-├── src/
-│   ├── WindowsUiFlowRecorder.Domain/         # Entities, Policies, Value Objects, Repository interfaces
-│   ├── WindowsUiFlowRecorder.Application/     # Service interfaces & implementations, Export DTOs
-│   ├── WindowsUiFlowRecorder.Infrastructure/  # FlaUI, Win32 hooks, JSON persistence, screenshots
-│   └── WindowsUiFlowRecorder.Presentation/    # App entry point, DI composition root
-└── tests/
-    ├── WindowsUiFlowRecorder.Domain.Tests/      # 14 tests (policies, entities, results)
-    ├── WindowsUiFlowRecorder.Application.Tests/  # 14 tests (services, architecture compliance)
-    ├── WindowsUiFlowRecorder.Infrastructure.Tests/
-    └── WindowsUiFlowRecorder.Presentation.Tests/
-```
-
-### Architecture constraints (verified by tests)
-
-| Rule | Enforced by |
-|---|---|
-| Domain references no other project | `ArchitectureComplianceTests.Domain_HasNoUnsolicitedDependencies` |
-| Application references no FlaUI/WPF types | `ArchitectureComplianceTests.Application_DoesNotReferenceFlaUI` |
-| Infrastructure implements all Application interfaces | `ArchitectureComplianceTests.Infrastructure_ImplementsApplicationInterfaces` |
-| Domain → Application → Infrastructure dependency direction | `ArchitectureComplianceTests.DependencyDirection_DomainHasNoOutgoingProjectRefs` |
-
-### Deployment
-
-The tool is distributed as a **self-contained .NET 8 build** (bundling the runtime, per `RiskAnalysis.md` R-18) so no separate .NET installation is required on air-gapped test workstations:
+For air-gapped workstations with no .NET runtime:
 
 ```shell
+# Using the included publish script
+./publish.sh
+
+# Or manually:
 dotnet publish src/WindowsUiFlowRecorder.Presentation \
   --configuration Release \
   --runtime win-x64 \
   --self-contained true \
-  -p:IncludeNativeLibrariesForSelfExtract=true
+  -p:PublishSingleFile=true \
+  -p:IncludeNativeLibrariesForSelfExtract=true \
+  -o ./publish
 ```
 
-### Usage
+The portable build is at `./publish/WindowsUiFlowRecorder.Presentation.exe`.
 
-The MVP currently ships as a **console application** that validates the architecture (DI wiring, service loading, repository initialization). The full WPF UI (Recorder controls, Scanner tree view, overlay) is scaffolded but not wired into the entry point yet — that happens in `Roadmap.md` Phase 6.
+---
 
-#### 1. Verify the build
+## 4. How To Use — Flow Recorder
 
-```shell
-dotnet run --project src/WindowsUiFlowRecorder.Presentation
+### Step 1: Configure a Target
+
+1. Open the **Application Profiles** tab
+2. Click **⟳ Refresh** to load existing profiles (or start fresh)
+3. Use the **Name** and **Desc** fields to edit a profile's metadata
+4. To create a real profile, edit `%LOCALAPPDATA%\WindowsUiFlowRecorder\Profiles\{profileId}.json` directly:
+
+```json
+{
+  "ProfileId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "Name": "Notepad",
+  "Description": "Simple single-app test",
+  "CreatedAtUtc": "2026-07-05T12:00:00.000Z",
+  "LastModifiedAtUtc": "2026-07-05T12:00:00.000Z",
+  "LaunchChain": {
+    "Steps": [
+      {
+        "StepOrder": 1,
+        "ApplicationTag": "Notepad",
+        "ExecutablePath": "notepad.exe",
+        "Arguments": null,
+        "WorkingDirectory": null,
+        "ReadinessCondition": {
+          "ConditionType": "ProcessStarted"
+        },
+        "ReadinessTimeoutSecondsOverride": null,
+        "CleanUpOnFailure": true
+      }
+    ]
+  }
+}
 ```
 
-Expected output:
-```
-info: ConsoleApp[0] Windows UI Flow Recorder & Smart UI Scanner v0.1.0
-info: ConsoleApp[0] RecordingSessionService loaded - current state: Idle
-info: ConsoleApp[0] ApplicationProfileService loaded - profiles count: 0
-info: ConsoleApp[0] Settings loaded - screenshot mode: EveryAction, timeout: 30s
-info: ConsoleApp[0] Build complete. Ready for deployment on Windows 10/11.
-```
+For a multi-app launch chain (Proxy App → eAdmin App):
 
-This confirms all 4 layers load and DI resolves correctly.
-
-#### 2. Run tests
-
-```shell
-dotnet test
-```
-
-All 30 tests should pass: 14 Domain tests (entities, policies, results), 14 Application tests (mocked services, architecture compliance), 2 Infrastructure/Presentation smoke tests.
-
-#### 3. Customize and extend
-
-This is a **greenfield codebase** — no production-ready UI exists yet. To build the full product, follow `docs/Roadmap.md`:
-
-| Phase | What you build |
-|---|---|
-| Phase 0 | Solution skeleton (done) |
-| Phase 1 | Domain entities + Application contracts (done) |
-| Phase 2 | Real `FlaUiAutomationProvider` — replace `Infrastructure/Automation/FlaUiAutomationProvider.cs` stub with FlaUI-backed implementation |
-| Phase 3 | `ApplicationLaunchOrchestrator` readiness polling against real processes |
-| Phase 4 | Real `GlobalInputHook` — replace Win32 hook stub |
-| Phase 5 | Real `ScreenshotCapturer` — replace `System.Drawing` stub |
-| Phase 6 | WPF Recorder UI (Views + ViewModels on `WindowsUiFlowRecorder.Presentation`) |
-| Phase 7 | Export pipeline (done at Application layer; wire `ExportService` to UI) |
-| Phase 8 | Smart UI Scanner UI (WPF tree view + search) |
-| Phase 9 | Session list, profile manager, settings UI |
-| Phase 10 | Real-app acceptance testing, performance validation, self-contained publish |
-
-Each phase's deliverables, test expectations, and risks are detailed in `docs/Roadmap.md`.
-
-#### 4. Connect to a real target application (Phase 2+)
-
-Once the FlaUI adapter is implemented:
-
-```csharp
-// Example: programmatic use of the orchestrator
-var orchestrator = serviceProvider.GetRequiredService<IApplicationLaunchOrchestrator>();
-var chain = new ApplicationLaunchChain([
-    new LaunchStep(1, "ProxyApp", @"C:\Proxy\ProxyApp.exe", null, null,
-        new ReadinessCondition(ConditionType.WindowAppeared, "Proxy*", null,
-            null, null, null, null, null, null, null),
-        null, true)
-]);
-var result = await orchestrator.ExecuteLaunchChainAsync(chain, 250, CancellationToken.None);
+```json
+{
+  "Steps": [
+    {
+      "StepOrder": 1,
+      "ApplicationTag": "ProxyApp",
+      "ExecutablePath": "C:\\Proxy\\ProxyApp.exe",
+      "Arguments": null,
+      "ReadinessCondition": {
+        "ConditionType": "ControlPropertyEquals",
+        "ElementAutomationId": "lblHsmStatus",
+        "ExpectedPropertyName": "Value",
+        "ExpectedPropertyValue": "Connected"
+      },
+      "ReadinessTimeoutSecondsOverride": 30,
+      "CleanUpOnFailure": true
+    },
+    {
+      "StepOrder": 2,
+      "ApplicationTag": "EAdminApp",
+      "ExecutablePath": "C:\\eAdmin\\eAdminApp.exe",
+      "Arguments": null,
+      "ReadinessCondition": {
+        "ConditionType": "WindowAppeared",
+        "WindowTitlePattern": "eAdmin*",
+        "WindowMatchMode": "Contains"
+      },
+      "ReadinessTimeoutSecondsOverride": 30,
+      "CleanUpOnFailure": true
+    }
+  ]
+}
 ```
 
-#### 5. File locations (app data)
+### Step 2: Start Recording
 
-Working files are stored under:
+1. Switch to the **Flow Recorder** tab
+2. Click **Start Recording** — the tool launches the target application(s) automatically
+3. A blinking red overlay appears in the top-right corner: **Recording active**
+
+### Step 3: Perform Your Test
+
+- Click buttons, type text, switch windows — everything is captured
+- The overlay blinks red while recording
+- Click **Pause** to pause (overlay turns orange)
+- Click **Resume** to continue
+
+### Step 4: Stop & Review
+
+1. Click **Stop** — the session is saved and the overlay disappears
+2. A **Session Summary** appears showing: duration, action count, window count, screenshot count
+
+### Step 5: Export
+
+1. Click **Export** — a folder picker opens
+2. Choose a destination folder
+3. The tool writes:
+   - `export.json` — the versioned `ExportPackage` document
+   - `screenshots/` — all captured PNG images, referenced by relative path
+4. The exported package is fully portable — copy it anywhere
+
+### Step 6: Manage Sessions
+
+1. Switch to the **Session History** tab
+2. Select a session to rename, add notes, or delete
+3. Re-export any completed session by selecting it and clicking Export in the Recorder tab
+
+---
+
+## 5. How To Use — Smart UI Scanner
+
+1. Switch to the **Smart UI Scanner** tab
+2. Select a running application from the dropdown (click **⟳ Refresh** to update the list)
+3. Click **Scan** — the full UIA hierarchy tree loads in the left panel
+4. **Search** — type in the search box to filter by AutomationId, Name, ControlType, or ClassName
+5. **Select an element** — click any node in the tree:
+   - A red highlight border appears on screen around the element
+   - The right panel shows full metadata (AutomationId, bounding rectangle, patterns, etc.)
+6. Click **Export Scan** to export the scan as a standalone JSON document
+
+---
+
+## 6. How To Configure Settings
+
+1. Switch to the **Settings** tab
+2. Adjust any setting:
+   - **Screenshot Mode**: Every Action (default), Window Change Only, Manual Checkpoint Only, Off
+   - **Element Cropped Screenshot**: Capture additional element-bounded screenshots
+   - **Hierarchy Re-capture Sensitivity**: Low (2s), Medium (500ms), High (100ms)
+   - **Default Export Directory**: Pre-fills the export dialog
+   - **Readiness Timeout**: How long to wait for a launch condition (default 30s)
+   - **Readiness Poll Interval**: How often to poll conditions (default 250ms)
+   - **Max Hierarchy Elements**: Safety limit for tree walks (default 5,000)
+   - **Verbose Diagnostic Logging**: Enable detailed logs (opt-in only)
+3. Click **Save Settings** — changes take effect immediately
+
+---
+
+## 7. File Locations
 
 ```
 %LOCALAPPDATA%\WindowsUiFlowRecorder\
-├── Profiles\        # Saved ApplicationProfile JSON files
-├── Sessions\        # Recorded session data (pre-export)
-├── Settings\        # settings.json
-└── Logs\            # Rolling log files
+├── Profiles\           # Saved ApplicationProfile JSON files (one per profile)
+├── Sessions\           # Recorded session data (pre-export, one folder per session)
+│   └── {sessionId}\
+│       ├── session.json
+│       └── screenshots\
+├── Settings\           # settings.json
+└── Logs\               # Rolling log files
 ```
+
+Exported packages are written to the user-chosen destination and contain:
+```
+{export-folder}/
+├── export.json          # Versioned ExportPackage document
+└── screenshots/         # PNG screenshot files
+```
+
+---
+
+## 8. Test
+
+```shell
+# Domain tests (works on any platform — 18 tests)
+dotnet test tests/WindowsUiFlowRecorder.Domain.Tests
+
+# All tests (requires Windows Desktop Runtime — 21 architecture + 14 service + 18 domain + edge cases)
+dotnet test
+
+# Architecture compliance only
+dotnet test --filter "FullyQualifiedName~ArchitectureComplianceTests"
+
+# Run with coverage
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+### Architecture compliance tests (21 tests)
+
+| Test | What it checks |
+|---|---|
+| `Domain_HasNoUnsolicitedDependencies` | Domain doesn't reference FlaUI, Application, Infrastructure, or Presentation |
+| `Domain_HasNoNetworkDependencies` | Domain doesn't reference System.Net/Http/Sockets |
+| `Application_DoesNotReferenceFlaUI` | Application is FlaUI-free |
+| `Application_DoesNotReferenceWpfNamespaces` | Application is WPF-free |
+| `Application_HasNoNetworkDependencies` | Application is network-free |
+| `Infrastructure_ImplementsApplicationInterfaces` | Every Application abstraction has an Infrastructure implementation |
+| `Infrastructure_HasNoNetworkDependencies` | Infrastructure is network-free |
+| `DependencyDirection_DomainHasNoOutgoingProjectRefs` | Domain → Application → Infrastructure direction |
+| `Presentation_HasNoNetworkDependencies` | Presentation is network-free |
+| `AllLayers_FlaUiDoesNotLeakUpward` | No FlaUI in Domain/Application/Presentation |
+| `AllLayers_StrictDependencyDirection` | Full dependency graph check |
+
+---
+
+## 9. Solution Structure
+
+```
+WindowsUiFlowRecorder.sln
+├── src/
+│   ├── WindowsUiFlowRecorder.Domain/         # Entities, Policies, Repository interfaces, Common
+│   │   ├── Entities/         (14 files)
+│   │   ├── Policies/         (2 files)
+│   │   ├── Abstractions/     (3 repository interfaces)
+│   │   └── Common/           (20 enum/record types)
+│   ├── WindowsUiFlowRecorder.Application/     # Services, Interfaces, Export DTOs, DI
+│   │   ├── Recording/        (RecordingSessionService + interface)
+│   │   ├── Launching/        (ApplicationLaunchOrchestrator)
+│   │   ├── Scanning/         (UiScanService)
+│   │   ├── Export/           (ExportService, 12 DTOs)
+│   │   ├── Profiles/         (ApplicationProfileService)
+│   │   ├── Settings/         (SettingsService)
+│   │   ├── Abstractions/     (5 infrastructure-facing interfaces)
+│   │   └── DependencyInjection/
+│   ├── WindowsUiFlowRecorder.Infrastructure/  # FlaUI, Win32 hooks, JSON persistence, screenshots
+│   │   ├── Automation/       (FlaUiAutomationProvider)
+│   │   ├── Processes/        (ProcessLaunchMonitor)
+│   │   ├── Screenshots/      (ScreenshotCapturer)
+│   │   ├── Input/            (GlobalInputHook)
+│   │   ├── Persistence/      (3 JSON repos + ExportWriter)
+│   │   ├── Logging/          (LoggingConfiguration)
+│   │   └── DependencyInjection/
+│   └── WindowsUiFlowRecorder.Presentation/   # WPF Views, ViewModels, DI composition root
+│       ├── Recorder/         (RecorderViewModel, RecorderView)
+│       ├── Scanner/          (ScannerViewModel, ScannerView, ElementTreeNode)
+│       ├── Profiles/         (SessionListViewModel, ProfileManagerViewModel + Views)
+│       ├── Settings/         (SettingsViewModel + View)
+│       ├── Shared/           (ViewModelBase, RelayCommand, converters, overlays)
+│       └── DependencyInjection/
+└── tests/
+    ├── WindowsUiFlowRecorder.Domain.Tests/       # 18 tests
+    ├── WindowsUiFlowRecorder.Application.Tests/   # 35 tests (14 services + 11 architecture + 10 edge cases)
+    ├── WindowsUiFlowRecorder.Infrastructure.Tests/ # Integration tests (requires Windows)
+    └── WindowsUiFlowRecorder.Presentation.Tests/
+```
+
+---
+
+## 10. Documentation Index
+
+| Document | Contents |
+|---|---|
+| [`docs/PRD.md`](./docs/PRD.md) | Product vision, personas, goals/non-goals, requirements, acceptance criteria |
+| [`docs/Architecture.md`](./docs/Architecture.md) | Clean Architecture layering, structure, dependency graph, sequence & component diagrams |
+| [`docs/SystemDesign.md`](./docs/SystemDesign.md) | State machines, algorithms, threading, timing budgets, file layout, failure handling |
+| [`docs/DataModel.md`](./docs/DataModel.md) | Field-level DTO/entity contracts for every model |
+| [`docs/UseCases.md`](./docs/UseCases.md) | Actor flows with worked examples |
+| [`docs/TestingStrategy.md`](./docs/TestingStrategy.md) | Test pyramid, mock strategy, integration harness |
+| [`docs/Roadmap.md`](./docs/Roadmap.md) | Phased build order (all 10 phases completed) |
+| [`docs/RiskAnalysis.md`](./docs/RiskAnalysis.md) | Risk register with mitigations |
+| [`docs/FutureEnhancements.md`](./docs/FutureEnhancements.md) | Out-of-MVP ideas (AI generation, cloud sync, etc.) |
+| [`docs/CodingGuidelines.md`](./docs/CodingGuidelines.md) | Naming, layering, DI, serialization, testing conventions |
+
+---
+
+## 11. Technology Stack
+
+| Concern | Choice |
+|---|---|
+| Language | C# (.NET 8) |
+| UI Framework | WPF, MVVM |
+| UI Automation | FlaUI (UIA3) |
+| Architecture | Clean Architecture (4 layers) |
+| DI | `Microsoft.Extensions.DependencyInjection` |
+| Logging | `Microsoft.Extensions.Logging` |
+| Serialization | `System.Text.Json` |
+| Testing | xUnit, FluentAssertions, Moq |
+
+---
+
+## 12. Architecture Constraints (Enforced by Tests)
+
+| Rule | Enforced by |
+|---|---|
+| Domain references no other project | `Domain_HasNoUnsolicitedDependencies` |
+| Application references no FlaUI/WPF | `Application_DoesNotReferenceFlaUI`, `Application_DoesNotReferenceWpfNamespaces` |
+| Infrastructure implements all Application interfaces | `Infrastructure_ImplementsApplicationInterfaces` |
+| Domain → Application → Infrastructure direction | `DependencyDirection_DomainHasNoOutgoingProjectRefs`, `AllLayers_StrictDependencyDirection` |
+| No network calls in any layer | 4 layer-specific `*_HasNoNetworkDependencies` tests |
+| No FlaUI leaks upward | `AllLayers_FlaUiDoesNotLeakUpward` |
+| Nullable reference types enabled | `.editorconfig` + build errors |
+
+---
+
+## 13. Known Limitations (MVP)
+
+- **UIA Events not fully wired** — `FlaUiAutomationProvider.SubscribeToEventsAsync` logs but does not attach real UIA event handlers. Window discovery relies on the capture pipeline polling the process window list. Real UIA event subscription would reduce latency for window-opened events.
+- **Single-user, single-workstation** — no collaboration features
+- **Windows-only** — requires Windows 10/11 Desktop Runtime
+- **No built-in test runner** — the export format is the integration surface for downstream tooling
+- **No edit-in-place for recorded actions** — basic rename/annotate/delete only
+
+See [`docs/RiskAnalysis.md`](./docs/RiskAnalysis.md) for the full risk register and [`docs/FutureEnhancements.md`](./docs/FutureEnhancements.md) for post-MVP ideas.
