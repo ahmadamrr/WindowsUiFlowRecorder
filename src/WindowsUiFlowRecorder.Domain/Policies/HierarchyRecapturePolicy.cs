@@ -16,8 +16,11 @@ public static class HierarchyRecapturePolicy
     }
 
     public static StructuralFingerprint ComputeFingerprint(WindowSnapshot snapshot)
+        => ComputeFingerprint(snapshot.RootElement);
+
+    public static StructuralFingerprint ComputeFingerprint(ElementInfo rootElement)
     {
-        var hash = ComputeFingerprintHash(snapshot.RootElement, 0);
+        var hash = ComputeFingerprintHash(rootElement, 0);
         return new StructuralFingerprint(hash);
     }
 

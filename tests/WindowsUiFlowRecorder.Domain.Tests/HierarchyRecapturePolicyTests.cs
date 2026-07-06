@@ -49,14 +49,107 @@ public class HierarchyRecapturePolicyTests
                 true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 1, [])
         ]);
 
-        var window = new WindowSnapshot(
-            Guid.NewGuid(), "TestApp", 1234, "Test Window", "WindowClass",
-            new BoundingRectangle(0, 0, 800, 600),
-            DateTime.UtcNow, DateTime.UtcNow, 1, element, new StructuralFingerprint(""));
-
-        var fp1 = HierarchyRecapturePolicy.ComputeFingerprint(window);
-        var fp2 = HierarchyRecapturePolicy.ComputeFingerprint(window);
+        var fp1 = HierarchyRecapturePolicy.ComputeFingerprint(element);
+        var fp2 = HierarchyRecapturePolicy.ComputeFingerprint(element);
 
         fp1.Should().Be(fp2);
+    }
+
+    [Fact]
+    public void ComputeFingerprint_DifferentStructures_ReturnsDifferentHashes()
+    {
+        var elementA = new ElementInfo(
+            "root", null, null, "Window", null, null, null,
+            true, false, false, new BoundingRectangle(0, 0, 800, 600),
+            [], null, 0,
+        [
+            new ElementInfo("btn1", "submitBtn", "Submit", "Button", null, null, null,
+                true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 1, [])
+        ]);
+
+        var elementB = new ElementInfo(
+            "root", null, null, "Window", null, null, null,
+            true, false, false, new BoundingRectangle(0, 0, 800, 600),
+            [], null, 0,
+        [
+            new ElementInfo("btn1", "submitBtn", "Submit", "Button", null, null, null,
+                true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 1,
+            [
+                new ElementInfo("inner1", "childEdit", "Child", "Edit", null, null, null,
+                    true, false, true, new BoundingRectangle(20, 20, 200, 20), ["Value"], null, 2, [])
+            ])
+        ]);
+
+        var fpA = HierarchyRecapturePolicy.ComputeFingerprint(elementA);
+        var fpB = HierarchyRecapturePolicy.ComputeFingerprint(elementB);
+
+        fpA.Should().NotBe(fpB);
+    }
+
+    [Fact]
+    public void ComputeFingerprint_AutomationIdChange_ChangesHash()
+    {
+        var elementWithIdA = new ElementInfo(
+            "btn1", "oldId", "OK", "Button", null, null, null,
+            true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 0, []);
+
+        var elementWithIdB = new ElementInfo(
+            "btn1", "newId", "OK", "Button", null, null, null,
+            true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 0, []);
+
+        var fpA = HierarchyRecapturePolicy.ComputeFingerprint(elementWithIdA);
+        var fpB = HierarchyRecapturePolicy.ComputeFingerprint(elementWithIdB);
+
+        fpA.Should().NotBe(fpB);
+    }
+
+    [Fact]
+    public void ComputeFingerprint_NestedElementAdded_ChangesHash()
+    {
+        var flat = new ElementInfo(
+            "root", null, null, "Window", null, null, null,
+            true, false, false, new BoundingRectangle(0, 0, 800, 600),
+            [], null, 0, []);
+
+        var nested = new ElementInfo(
+            "root", null, null, "Window", null, null, null,
+            true, false, false, new BoundingRectangle(0, 0, 800, 600),
+            [], null, 0,
+        [
+            new ElementInfo("child1", null, null, "Pane", null, null, null,
+                true, false, false, new BoundingRectangle(0, 0, 800, 600), [], null, 1, [])
+        ]);
+
+        var fpFlat = HierarchyRecapturePolicy.ComputeFingerprint(flat);
+        var fpNested = HierarchyRecapturePolicy.ComputeFingerprint(nested);
+
+        fpFlat.Should().NotBe(fpNested);
+    }
+
+    [Fact]
+    public void ComputeFingerprint_LargeHierarchy_PerformanceWithinBudget()
+    {
+        var root = BuildDeepHierarchy(100);
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var fp = HierarchyRecapturePolicy.ComputeFingerprint(root);
+        sw.Stop();
+
+        sw.ElapsedMilliseconds.Should().BeLessThan(1000);
+        fp.Value.Should().NotBeNullOrEmpty();
+    }
+
+    private static ElementInfo BuildDeepHierarchy(int breadth)
+    {
+        var children = Enumerable.Range(0, breadth)
+            .Select(i => new ElementInfo(
+                $"child{i}", $"autoId{i}", $"Name{i}", "Button", null, null, null,
+                true, false, true, new BoundingRectangle(i * 10, 0, 80, 30),
+                ["Invoke"], null, 1, []))
+            .ToList();
+
+        return new ElementInfo(
+            "root", null, "Root", "Window", null, null, null,
+            true, false, false, new BoundingRectangle(0, 0, 1024, 768),
+            [], null, 0, children);
     }
 }

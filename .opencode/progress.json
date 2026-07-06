@@ -30,8 +30,8 @@
     },
     "5": {
       "name": "Hierarchy & Screenshot Capture",
-      "status": "partial",
-      "notes": "WalkHierarchyAsync walker and ScreenshotCapturer exist; structural fingerprinting not wired to HierarchyRecapturePolicy; performance benchmarks untested"
+      "status": "completed",
+      "notes": "StructuralFingerprint computed in WalkHierarchyAsync via HierarchyRecapturePolicy.ComputeFingerprint(ElementInfo); ApplyWindowSnapshotAsync checks fingerprints via ShouldRecapture before re-capturing windows; OnWindowActivated and FlushCoalescedActionAsync both use re-capture logic; GetMinimumRecaptureInterval maps Sensitivity to TimeSpan (Low=2s, Medium=500ms, High=100ms); Settings.MaxHierarchyElementCount wired to walk calls; ComputeFingerprint(ElementInfo) overload added; 4 new fingerprint tests (different structures, AutomationId change, nested element added, large hierarchy performance)"
     },
     "6": {
       "name": "Recording Session Orchestration + Recorder UI",

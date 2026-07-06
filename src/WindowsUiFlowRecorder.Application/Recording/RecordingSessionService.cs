@@ -288,17 +288,55 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
     {
         if (CurrentState != RecordingSessionState.Recording) return;
 
-        lock (_lock)
-        {
-            if (_session != null && !_session.Windows.ContainsKey(snapshot.WindowId))
-            {
-                _session.Windows[snapshot.WindowId] = snapshot;
-                _logger.LogDebug("Window captured: {Title}", snapshot.Title);
-            }
-        }
+        _ = TryUpdateWindowCaptureAsync(snapshot);
 
         _inputQueue.Enqueue(new RawInputEvent(
             InputEventType.WindowActivated, DateTime.UtcNow, null, null, false, IntPtr.Zero));
+    }
+
+    private async Task TryUpdateWindowCaptureAsync(WindowSnapshot snapshot)
+    {
+        try
+        {
+            var settings = (await _settingsService.GetSettingsAsync()).Value;
+            var minInterval = GetMinimumRecaptureInterval(
+                settings?.HierarchyRecaptureSensitivity ?? HierarchyRecaptureSensitivity.Medium);
+
+            lock (_lock)
+            {
+                if (_session == null) return;
+
+                if (!_session.Windows.TryGetValue(snapshot.WindowId, out var existing))
+                {
+                    _session.Windows[snapshot.WindowId] = snapshot;
+                    _logger.LogDebug("Window captured: {Title}", snapshot.Title);
+                    return;
+                }
+
+                var timeSinceLastCapture = DateTime.UtcNow - existing.LastUpdatedAtUtc;
+                var shouldRecapture = HierarchyRecapturePolicy.ShouldRecapture(
+                    existing.StructuralFingerprint,
+                    snapshot.StructuralFingerprint,
+                    minInterval,
+                    timeSinceLastCapture);
+
+                if (shouldRecapture)
+                {
+                    var updated = snapshot with
+                    {
+                        FirstCapturedAtUtc = existing.FirstCapturedAtUtc,
+                        CaptureCount = existing.CaptureCount + 1
+                    };
+                    _session.Windows[snapshot.WindowId] = updated;
+                    _logger.LogDebug("Window re-captured (structural change): {Title} (capture #{Count})",
+                        snapshot.Title, updated.CaptureCount);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to check window re-capture for {WindowId}", snapshot.WindowId);
+        }
     }
 
     private void OnWindowOpened(IntPtr windowHandle)
@@ -464,7 +502,8 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                 var handle = last.WindowHandle;
                 if (handle.HasValue && handle.Value != IntPtr.Zero)
                 {
-                    var winResult = await _uiAutomation.WalkHierarchyAsync(handle.Value, 5000, ct);
+                    var maxElements = GetMaxElementCount(settings);
+                    var winResult = await _uiAutomation.WalkHierarchyAsync(handle.Value, maxElements, ct);
                     if (winResult.IsSuccess)
                     {
                         var snapshot = winResult.Value;
@@ -472,11 +511,7 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                         targetElement = snapshot.RootElement;
                         applicationTag = snapshot.ApplicationTag;
 
-                        lock (_lock)
-                        {
-                            if (!_session.Windows.ContainsKey(windowId))
-                                _session.Windows[windowId] = snapshot;
-                        }
+                        await ApplyWindowSnapshotAsync(snapshot, settings);
                     }
                 }
             }
@@ -488,11 +523,7 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                 {
                     windowId = owningResult.Value.WindowId;
                     applicationTag = owningResult.Value.ApplicationTag;
-                    lock (_lock)
-                    {
-                        if (!_session.Windows.ContainsKey(windowId))
-                            _session.Windows[windowId] = owningResult.Value;
-                    }
+                    await ApplyWindowSnapshotAsync(owningResult.Value, settings);
                 }
             }
 
@@ -555,6 +586,51 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
         }
     }
 
+    private async Task ApplyWindowSnapshotAsync(WindowSnapshot snapshot, Settings? settings)
+    {
+        var minInterval = GetMinimumRecaptureInterval(
+            settings?.HierarchyRecaptureSensitivity ?? HierarchyRecaptureSensitivity.Medium);
+
+        lock (_lock)
+        {
+            if (_session == null) return;
+
+            if (!_session.Windows.TryGetValue(snapshot.WindowId, out var existing))
+            {
+                _session.Windows[snapshot.WindowId] = snapshot;
+                return;
+            }
+
+            var timeSinceLastCapture = DateTime.UtcNow - existing.LastUpdatedAtUtc;
+            var shouldRecapture = HierarchyRecapturePolicy.ShouldRecapture(
+                existing.StructuralFingerprint,
+                snapshot.StructuralFingerprint,
+                minInterval,
+                timeSinceLastCapture);
+
+            if (shouldRecapture)
+            {
+                var updated = snapshot with
+                {
+                    FirstCapturedAtUtc = existing.FirstCapturedAtUtc,
+                    CaptureCount = existing.CaptureCount + 1
+                };
+                _session.Windows[snapshot.WindowId] = updated;
+                _logger.LogDebug("Window re-captured: {Title} (capture #{Count})",
+                    snapshot.Title, updated.CaptureCount);
+            }
+        }
+    }
+
+    private static TimeSpan GetMinimumRecaptureInterval(HierarchyRecaptureSensitivity sensitivity)
+        => sensitivity switch
+        {
+            HierarchyRecaptureSensitivity.Low => TimeSpan.FromSeconds(2),
+            HierarchyRecaptureSensitivity.Medium => TimeSpan.FromMilliseconds(500),
+            HierarchyRecaptureSensitivity.High => TimeSpan.FromMilliseconds(100),
+            _ => TimeSpan.FromMilliseconds(500)
+        };
+
     private string GetSessionScreenshotsFolder()
     {
         var baseDir = Path.Combine(
@@ -563,6 +639,9 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
             _session?.SessionId.ToString() ?? "unknown");
         return Path.Combine(baseDir, "screenshots");
     }
+
+    private int GetMaxElementCount(Settings? settings)
+        => settings?.MaxHierarchyElementCount ?? 5000;
 
     private void SetState(RecordingSessionState newState)
     {

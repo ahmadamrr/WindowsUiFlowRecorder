@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using WindowsUiFlowRecorder.Application.Abstractions;
 using WindowsUiFlowRecorder.Domain.Common;
 using WindowsUiFlowRecorder.Domain.Entities;
+using WindowsUiFlowRecorder.Domain.Policies;
 
 public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
 {
@@ -80,7 +81,7 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
                     (int)element.BoundingRectangle.Width,
                     (int)element.BoundingRectangle.Height),
                 now, now, 1, rootInfo,
-                new StructuralFingerprint(""));
+                HierarchyRecapturePolicy.ComputeFingerprint(rootInfo));
 
             return Task.FromResult(Result<WindowSnapshot>.Success(snapshot));
         }
