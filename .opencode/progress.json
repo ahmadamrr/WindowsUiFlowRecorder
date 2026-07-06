@@ -45,8 +45,8 @@
     },
     "8": {
       "name": "Smart UI Scanner",
-      "status": "partial",
-      "notes": "UiScanService thin wrapper exists; NO Scanner UI, no search/filter, no on-screen highlight"
+      "status": "completed",
+      "notes": "ScannerViewModel with process enumeration, scan, tree navigation, search/filter (by AutomationId/Name/ControlType/ClassName), element details panel, standalone export via ExportService; ScannerView with hierarchy TreeView, search box, details panel, scan/export/refresh buttons; ElementTreeNode with recursive tree, flatten, apply-filter, visible/expanded tracking; ElementHighlightWindow on-screen overlay; wired into MainWindow Scanner tab and DI"
     },
     "9": {
       "name": "Session/Profile Management + Settings",

@@ -4,32 +4,41 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using WindowsUiFlowRecorder.Domain.Common;
 using WindowsUiFlowRecorder.Presentation.Recorder;
+using WindowsUiFlowRecorder.Presentation.Scanner;
 using WindowsUiFlowRecorder.Presentation.Shared;
 
 public partial class MainWindow : Window
 {
-    private readonly RecorderViewModel _viewModel;
+    private readonly RecorderViewModel _recorderViewModel;
+    private readonly ScannerViewModel _scannerViewModel;
     private RecordingOverlay? _overlay;
+    private ElementHighlightWindow? _highlight;
 
     public MainWindow()
     {
         InitializeComponent();
 
-        _viewModel = App.ServiceProvider.GetRequiredService<RecorderViewModel>();
-        DataContext = _viewModel;
+        _recorderViewModel = App.ServiceProvider.GetRequiredService<RecorderViewModel>();
+        _scannerViewModel = App.ServiceProvider.GetRequiredService<ScannerViewModel>();
+        DataContext = _recorderViewModel;
 
-        _viewModel.PropertyChanged += (_, e) =>
+        _recorderViewModel.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(RecorderViewModel.State))
-            {
-                HandleStateChange(_viewModel.State);
-            }
+                HandleStateChange(_recorderViewModel.State);
+        };
+
+        _scannerViewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ScannerViewModel.HighlightBounds))
+                HandleHighlightChange(_scannerViewModel.HighlightBounds);
         };
 
         Loaded += (_, _) =>
         {
             _overlay = new RecordingOverlay();
-            HandleStateChange(_viewModel.State);
+            _highlight = new ElementHighlightWindow();
+            HandleStateChange(_recorderViewModel.State);
         };
     }
 
@@ -49,5 +58,15 @@ public partial class MainWindow : Window
                 _overlay.HideOverlay();
                 break;
         }
+    }
+
+    private void HandleHighlightChange(BoundingRectangle? bounds)
+    {
+        if (_highlight == null) return;
+
+        if (bounds.HasValue)
+            _highlight.ShowHighlight(bounds.Value);
+        else
+            _highlight.HideHighlight();
     }
 }
