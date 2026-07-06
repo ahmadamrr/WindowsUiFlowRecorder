@@ -50,8 +50,8 @@
     },
     "9": {
       "name": "Session/Profile Management + Settings",
-      "status": "partial",
-      "notes": "Services and JSON repos exist; NO Settings/Profile/Session-list UI"
+      "status": "completed",
+      "notes": "Session List UI with rename/annotate/delete via ISessionRepository; Profile Manager UI with view/edit/duplicate/delete via IApplicationProfileService; Settings UI with screenshot mode, hierarchy sensitivity, default export dir, readiness timeout/poll, max elements, verbose logging — all applied live without restart. All wired into MainWindow tabs and DI."
     },
     "10": {
       "name": "Hardening & Acceptance",

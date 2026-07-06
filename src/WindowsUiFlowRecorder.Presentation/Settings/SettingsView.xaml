@@ -1,0 +1,128 @@
+<UserControl x:Class="WindowsUiFlowRecorder.Presentation.Settings.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:common="clr-namespace:WindowsUiFlowRecorder.Domain.Common;assembly=WindowsUiFlowRecorder.Domain"
+             xmlns:settings="clr-namespace:WindowsUiFlowRecorder.Presentation.Settings">
+    <UserControl.Resources>
+        <ObjectDataProvider x:Key="ScreenshotModes" MethodName="GetValues"
+                            ObjectType="{x:Type common:ScreenshotMode}"/>
+        <ObjectDataProvider x:Key="HierarchySensitivities" MethodName="GetValues"
+                            ObjectType="{x:Type common:HierarchyRecaptureSensitivity}"/>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#2D2D30" Padding="10" CornerRadius="4">
+            <TextBlock Text="Settings" FontSize="18" FontWeight="Bold" Foreground="White"/>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" Margin="0,8,0,0" VerticalScrollBarVisibility="Auto">
+            <Border BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="16" Background="#1A1A1A">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Screenshot Mode:" Foreground="#CCC" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding ScreenshotModes}"
+                                  SelectedItem="{Binding ScreenshotMode}" Background="#333" Foreground="#CCC" Padding="4"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Element Cropped Screenshot:" Foreground="#CCC" VerticalAlignment="Center"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding CaptureElementCropped}" Foreground="#CCC" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Grid.Row="2" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Hierarchy Re-capture Sensitivity:" Foreground="#CCC" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding HierarchySensitivities}"
+                                  SelectedItem="{Binding HierarchySensitivity}" Background="#333" Foreground="#CCC" Padding="4"/>
+                    </Grid>
+
+                    <Grid Grid.Row="3" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Default Export Directory:" Foreground="#CCC" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding DefaultExportDir}" Background="#333" Foreground="#CCC" BorderThickness="0" Padding="4"/>
+                        <Button Grid.Column="2" Content="Browse..." Command="{Binding BrowseExportDirCommand}"
+                                Background="#555" Foreground="White" BorderThickness="0" Padding="8,4" Margin="4,0"/>
+                    </Grid>
+
+                    <Grid Grid.Row="4" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Readiness Timeout (seconds):" Foreground="#CCC" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding ReadinessTimeoutSeconds}" Background="#333" Foreground="#CCC" BorderThickness="0" Padding="4"/>
+                    </Grid>
+
+                    <Grid Grid.Row="5" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Readiness Poll Interval (ms):" Foreground="#CCC" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding ReadinessPollIntervalMs}" Background="#333" Foreground="#CCC" BorderThickness="0" Padding="4"/>
+                    </Grid>
+
+                    <Grid Grid.Row="6" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Max Hierarchy Elements:" Foreground="#CCC" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding MaxHierarchyElements}" Background="#333" Foreground="#CCC" BorderThickness="0" Padding="4"/>
+                    </Grid>
+
+                    <Grid Grid.Row="7" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Verbose Diagnostic Logging:" Foreground="#CCC" VerticalAlignment="Center"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding VerboseLogging}" Foreground="#CCC" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Button Grid.Row="8" Content="Save Settings"
+                            Command="{Binding SaveCommand}"
+                            Background="#007ACC" Foreground="White" BorderThickness="0"
+                            Padding="16,8" FontSize="14" HorizontalAlignment="Center" Width="200"/>
+                </Grid>
+            </Border>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" Background="#007ACC" Padding="8" CornerRadius="4" Margin="0,8,0,0">
+            <TextBlock Text="{Binding StatusMessage, StringFormat='Status: {0}'}" Foreground="White" FontSize="12"/>
+        </Border>
+    </Grid>
+</UserControl>
