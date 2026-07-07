@@ -14,7 +14,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TabControl Grid.Row="0" Background="#2D2D30" BorderThickness="0">
+        <TabControl Grid.Row="0" Background="#2D2D30" BorderThickness="0" SelectionChanged="OnTabChanged">
             <TabItem Header="Flow Recorder" Background="#3E3E42" Foreground="#CCC">
                 <recorder:RecorderView/>
             </TabItem>

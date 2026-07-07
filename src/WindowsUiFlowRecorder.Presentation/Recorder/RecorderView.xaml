@@ -12,6 +12,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -33,7 +34,25 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Row="2" Margin="0,12,0,0">
+        <Border Grid.Row="2" Margin="0,8,0,0" Background="#1E1E1E" Padding="8" CornerRadius="4"
+                Visibility="{Binding CanConfigure, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Profile:" Foreground="#CCC" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Profiles}"
+                          SelectedItem="{Binding SelectedProfile}"
+                          DisplayMemberPath="Name"
+                          Background="#333" Foreground="#CCC" Padding="4"/>
+                <Button Grid.Column="2" Content="⟳" Command="{Binding LoadProfilesCommand}"
+                        Background="#555" Foreground="White" BorderThickness="0" Padding="8,4" Margin="4,0,0,0"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="3" Margin="0,12,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -60,27 +79,32 @@
                         <Button Content="Pause"
                                 Command="{Binding PauseCommand}"
                                 Background="#FF8C00" Foreground="White" BorderThickness="0"
-                                Padding="16,8" Margin="4" FontSize="13"/>
+                                Padding="16,8" Margin="4" FontSize="13"
+                                Visibility="{Binding CanPause, Converter={StaticResource BoolToVis}}"/>
 
                         <Button Content="Resume"
                                 Command="{Binding ResumeCommand}"
                                 Background="#28A745" Foreground="White" BorderThickness="0"
-                                Padding="16,8" Margin="4" FontSize="13"/>
+                                Padding="16,8" Margin="4" FontSize="13"
+                                Visibility="{Binding CanResume, Converter={StaticResource BoolToVis}}"/>
 
                         <Button Content="Stop"
                                 Command="{Binding StopCommand}"
                                 Background="#DC3545" Foreground="White" BorderThickness="0"
-                                Padding="16,8" Margin="4" FontSize="13"/>
+                                Padding="16,8" Margin="4" FontSize="13"
+                                Visibility="{Binding CanStop, Converter={StaticResource BoolToVis}}"/>
 
                         <Button Content="Export"
                                 Command="{Binding ExportCommand}"
                                 Background="#28A745" Foreground="White" BorderThickness="0"
-                                Padding="16,8" Margin="4" FontSize="13"/>
+                                Padding="16,8" Margin="4" FontSize="13"
+                                Visibility="{Binding CanExport, Converter={StaticResource BoolToVis}}"/>
 
                         <Button Content="New Session"
                                 Command="{Binding ResetCommand}"
                                 Background="#6C757D" Foreground="White" BorderThickness="0"
-                                Padding="16,8" Margin="4" FontSize="13"/>
+                                Padding="16,8" Margin="4" FontSize="13"
+                                Visibility="{Binding CanNewSession, Converter={StaticResource BoolToVis}}"/>
                     </StackPanel>
 
                     <Border Grid.Row="2" Margin="0,12,0,0" Background="#1E1E1E" Padding="10" CornerRadius="4">
@@ -111,7 +135,7 @@
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Text="Instructions" FontSize="14" FontWeight="SemiBold" Foreground="#666" Margin="0,0,0,8"/>
                     <TextBlock Grid.Row="1" Foreground="#555" FontSize="12" TextWrapping="Wrap">
-                        <Run Text="1. "/><Run Text="Select a target application profile" FontWeight="SemiBold" Foreground="#888"/><LineBreak/>
+                        <Run Text="1. "/><Run Text="Select a profile from the dropdown above" FontWeight="SemiBold" Foreground="#888"/><LineBreak/>
                         <Run Text="2. "/><Run Text="Click" FontWeight="SemiBold" Foreground="#888"/><Run Text=" 'Start Recording' "/><Run Text="to begin" FontWeight="SemiBold" Foreground="#888"/><LineBreak/>
                         <Run Text="3. "/><Run Text="Perform your manual test actions" FontWeight="SemiBold" Foreground="#888"/><LineBreak/>
                         <Run Text="4. "/><Run Text="Click " Foreground="#888"/><Run Text="'Stop'" FontWeight="SemiBold" Foreground="#888"/><Run Text=" when done" Foreground="#888"/><LineBreak/>
@@ -121,7 +145,7 @@
             </Border>
         </Grid>
 
-        <Border Grid.Row="3" Background="#007ACC" Padding="8" CornerRadius="4" Margin="0,8,0,0">
+        <Border Grid.Row="4" Background="#007ACC" Padding="8" CornerRadius="4" Margin="0,8,0,0">
             <TextBlock Text="{Binding StatusMessage, StringFormat='Status: {0}'}" Foreground="White" FontSize="12"/>
         </Border>
     </Grid>

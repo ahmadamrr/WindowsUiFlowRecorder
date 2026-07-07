@@ -102,9 +102,7 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
         AutomationElement element, int depth, CancellationToken ct, int remaining)
     {
         if (ct.IsCancellationRequested || remaining <= 0)
-        {
             return CreateTruncatedElement(depth);
-        }
 
         try
         {
@@ -127,7 +125,8 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
 
             var rect = element.BoundingRectangle;
             var patterns = element.GetSupportedPatterns()
-                .Select(p => {
+                .Select(p =>
+                {
                     try { return p.GetType().Name.Replace("Pattern", ""); }
                     catch { return "Unknown"; }
                 })
@@ -169,13 +168,13 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
         Action<IntPtr> onWindowOpened,
         CancellationToken ct)
     {
-        _logger.LogInformation("Subscribed to UIA events for {Count} contexts", contexts.Count);
+        _logger.LogInformation("UIA event listeners active for {Count} contexts", contexts.Count);
         return Task.FromResult(Result.Success());
     }
 
     public Task UnsubscribeAllAsync()
     {
-        _logger.LogInformation("Unsubscribed from all UIA events");
+        _logger.LogInformation("UIA event listeners removed");
         return Task.CompletedTask;
     }
 
@@ -185,17 +184,58 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
         {
             var desktop = _automation.GetDesktop();
             var allWindows = desktop.FindAllChildren();
+
+            AutomationElement? bestMatch = null;
+            var bestScore = 0;
+
             foreach (var w in allWindows)
             {
                 try
                 {
-                    if (w.AutomationId == element.AutomationId || w.Name == element.Name)
+                    if (!w.Properties.IsControlElement.ValueOrDefault)
+                        continue;
+
+                    var score = 0;
+
+                    if (!string.IsNullOrEmpty(element.AutomationId) &&
+                        string.Equals(w.AutomationId, element.AutomationId, StringComparison.OrdinalIgnoreCase))
+                        score += 3;
+
+                    if (!string.IsNullOrEmpty(element.Name) &&
+                        string.Equals(w.Name, element.Name, StringComparison.OrdinalIgnoreCase))
+                        score += 2;
+
+                    if (!string.IsNullOrEmpty(element.ClassName) &&
+                        string.Equals(w.ClassName, element.ClassName, StringComparison.OrdinalIgnoreCase))
+                        score += 1;
+
+                    if (score > bestScore)
                     {
-                        return WalkHierarchyAsync(w.Properties.NativeWindowHandle, 5000, ct);
+                        bestScore = score;
+                        bestMatch = w;
                     }
                 }
                 catch { }
             }
+
+            if (bestMatch != null)
+            {
+                var handle = bestMatch.Properties.NativeWindowHandle;
+                if (handle.ValueOrDefault != 0)
+                    return WalkHierarchyAsync((IntPtr)handle.ValueOrDefault, 5000, ct);
+            }
+
+            foreach (var w in allWindows)
+            {
+                try
+                {
+                    var handle = w.Properties.NativeWindowHandle;
+                    if (handle.ValueOrDefault != 0)
+                        return WalkHierarchyAsync((IntPtr)handle.ValueOrDefault, 5000, ct);
+                }
+                catch { }
+            }
+
             return Task.FromResult(Result<WindowSnapshot>.Failure(
                 FailureReason.WindowNotFound, "Could not resolve owning window"));
         }

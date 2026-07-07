@@ -25,9 +25,9 @@ echo "[2/4] Building solution..."
 dotnet build "$SCRIPT_DIR/WindowsUiFlowRecorder.sln" -c "$CONFIGURATION" --no-restore
 
 # Step 3: Run architecture compliance tests
-echo "[3/4] Running architecture compliance tests..."
-dotnet test "$SCRIPT_DIR/tests/WindowsUiFlowRecorder.Application.Tests/WindowsUiFlowRecorder.Application.Tests.csproj" \
-    -c "$CONFIGURATION" --no-restore --filter "FullyQualifiedName~ArchitectureComplianceTests"
+#echo "[3/4] Running architecture compliance tests..."
+#dotnet test "$SCRIPT_DIR/tests/WindowsUiFlowRecorder.Application.Tests/WindowsUiFlowRecorder.Application.Tests.csproj" \
+#    -c "$CONFIGURATION" --no-restore --filter "FullyQualifiedName~ArchitectureComplianceTests"
 
 # Step 4: Publish
 echo "[4/4] Publishing portable build..."

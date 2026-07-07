@@ -1,9 +1,3 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "customInstructions": "When starting work, read .opencode/progress.json to understand current phase. Update .opencode/progress.json after each phase completes. See AGENTS.md for full project conventions.",
-  "projects": {
-    "WindowsUiFlowRecorder": {
-      "path": "./WindowsUiFlowRecorder.sln"
-    }
-  }
 }

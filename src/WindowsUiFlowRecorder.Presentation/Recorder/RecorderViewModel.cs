@@ -1,5 +1,6 @@
 namespace WindowsUiFlowRecorder.Presentation.Recorder;
 
+using System.Collections.ObjectModel;
 using System.IO;
 using Microsoft.Extensions.Logging;
 using WindowsUiFlowRecorder.Application.Profiles;
@@ -21,6 +22,14 @@ public class RecorderViewModel : ViewModelBase
     private bool _hasError;
     private bool _hasSessionSummary;
     private bool _canConfigure;
+    private bool _canPause;
+    private bool _canResume;
+    private bool _canStop;
+    private bool _canExport;
+    private bool _canNewSession;
+    private ApplicationProfile? _selectedProfile;
+
+    public ObservableCollection<ApplicationProfile> Profiles { get; } = [];
 
     public RecordingSessionState State
     {
@@ -61,7 +70,43 @@ public class RecorderViewModel : ViewModelBase
     public bool CanConfigure
     {
         get => _canConfigure;
-        private set => SetProperty(ref _canConfigure, value);
+        private set { SetProperty(ref _canConfigure, value); RefreshCommands(); }
+    }
+
+    public bool CanPause
+    {
+        get => _canPause;
+        private set { SetProperty(ref _canPause, value); RefreshCommands(); }
+    }
+
+    public bool CanResume
+    {
+        get => _canResume;
+        private set { SetProperty(ref _canResume, value); RefreshCommands(); }
+    }
+
+    public bool CanStop
+    {
+        get => _canStop;
+        private set { SetProperty(ref _canStop, value); RefreshCommands(); }
+    }
+
+    public bool CanExport
+    {
+        get => _canExport;
+        private set { SetProperty(ref _canExport, value); RefreshCommands(); }
+    }
+
+    public bool CanNewSession
+    {
+        get => _canNewSession;
+        private set { SetProperty(ref _canNewSession, value); RefreshCommands(); }
+    }
+
+    public ApplicationProfile? SelectedProfile
+    {
+        get => _selectedProfile;
+        set => SetProperty(ref _selectedProfile, value);
     }
 
     public AsyncRelayCommand StartRecordingCommand { get; }
@@ -71,6 +116,7 @@ public class RecorderViewModel : ViewModelBase
     public AsyncRelayCommand ExportCommand { get; }
     public RelayCommand ResetCommand { get; }
     public RelayCommand DismissErrorCommand { get; }
+    public AsyncRelayCommand LoadProfilesCommand { get; }
 
     public RecorderViewModel(
         IRecordingSessionService sessionService,
@@ -82,24 +128,59 @@ public class RecorderViewModel : ViewModelBase
         _logger = logger;
 
         State = RecordingSessionState.Idle;
-        UpdateCanConfigure();
+        UpdateAllStates();
 
         _sessionService.StateChanged += OnSessionStateChanged;
         _sessionService.ErrorOccurred += OnError;
 
-        StartRecordingCommand = new AsyncRelayCommand(OnStartRecordingAsync, () => CanConfigure);
-        PauseCommand = new RelayCommand(OnPause, () => State == RecordingSessionState.Recording);
-        ResumeCommand = new RelayCommand(OnResume, () => State == RecordingSessionState.Paused);
-        StopCommand = new AsyncRelayCommand(OnStopAsync, () => State is RecordingSessionState.Recording or RecordingSessionState.Paused);
-        ExportCommand = new AsyncRelayCommand(OnExportAsync, () => State is RecordingSessionState.Reviewing or RecordingSessionState.Exported);
-        ResetCommand = new RelayCommand(OnReset, () => State is RecordingSessionState.Reviewing or RecordingSessionState.Exported or RecordingSessionState.LaunchFailed);
+        StartRecordingCommand = new AsyncRelayCommand(OnStartRecordingAsync, () => CanConfigure && SelectedProfile != null);
+        PauseCommand = new RelayCommand(OnPause, () => CanPause);
+        ResumeCommand = new RelayCommand(OnResume, () => CanResume);
+        StopCommand = new AsyncRelayCommand(OnStopAsync, () => CanStop);
+        ExportCommand = new AsyncRelayCommand(OnExportAsync, () => CanExport);
+        ResetCommand = new RelayCommand(OnReset, () => CanNewSession);
         DismissErrorCommand = new RelayCommand(_ => { HasError = false; ErrorMessage = string.Empty; });
+        LoadProfilesCommand = new AsyncRelayCommand(async _ => await LoadProfilesAsync());
+    }
+
+    public async Task LoadProfilesAsync()
+    {
+        var result = await _profileService.GetAllProfilesAsync();
+        Profiles.Clear();
+        if (result.IsSuccess && result.Value != null)
+        {
+            foreach (var p in result.Value)
+                Profiles.Add(p);
+
+            if (Profiles.Count > 0)
+                SelectedProfile = Profiles[0];
+        }
+
+        if (Profiles.Count == 0)
+        {
+            var defaultProfile = CreateDefaultProfile();
+            var saveResult = await _profileService.SaveProfileAsync(defaultProfile);
+            if (saveResult.IsSuccess)
+            {
+                Profiles.Add(defaultProfile);
+                SelectedProfile = defaultProfile;
+                _logger.LogInformation("Created default profile for Notepad");
+            }
+            else
+            {
+                HasError = true;
+                ErrorMessage = $"Failed to create default profile: {saveResult.ErrorMessage}";
+            }
+        }
+
+        RefreshCommands();
     }
 
     private void OnSessionStateChanged(RecordingSessionState newState)
     {
         State = newState;
         HasSessionSummary = newState is RecordingSessionState.Reviewing or RecordingSessionState.Exported;
+        UpdateAllStates();
 
         StatusMessage = newState switch
         {
@@ -115,8 +196,6 @@ public class RecorderViewModel : ViewModelBase
             RecordingSessionState.LaunchFailed => "Launch failed",
             _ => "Unknown"
         };
-
-        UpdateCanConfigure();
 
         if (newState == RecordingSessionState.Reviewing)
         {
@@ -142,9 +221,14 @@ public class RecorderViewModel : ViewModelBase
         _logger.LogWarning("Session error: {Message}", message);
     }
 
-    private void UpdateCanConfigure()
+    private void UpdateAllStates()
     {
         CanConfigure = State == RecordingSessionState.Idle;
+        CanPause = State == RecordingSessionState.Recording;
+        CanResume = State == RecordingSessionState.Paused;
+        CanStop = State is RecordingSessionState.Recording or RecordingSessionState.Paused;
+        CanExport = State is RecordingSessionState.Reviewing or RecordingSessionState.Exported;
+        CanNewSession = State is RecordingSessionState.Reviewing or RecordingSessionState.Exported or RecordingSessionState.LaunchFailed;
     }
 
     private void RefreshCommands()
@@ -158,38 +242,14 @@ public class RecorderViewModel : ViewModelBase
         {
             HasError = false;
 
-            var profilesResult = await _profileService.GetAllProfilesAsync();
-            var profiles = profilesResult.IsSuccess ? profilesResult.Value : [];
-
-            if (profiles == null || profiles.Count == 0)
+            if (SelectedProfile == null)
             {
-                var defaultProfile = new ApplicationProfile(
-                    Guid.NewGuid(),
-                    "Default Single App",
-                    "Placeholder: configure a real application path",
-                    DateTime.UtcNow,
-                    DateTime.UtcNow,
-                    new ApplicationLaunchChain([
-                        new LaunchStep(1, "TargetApp", "notepad.exe", null, null,
-                            new ReadinessCondition(ConditionType.ProcessStarted, null, null,
-                                null, null, null, null, null, null, null),
-                            null, true)
-                    ]));
-
-                var saveResult = await _profileService.SaveProfileAsync(defaultProfile);
-                if (!saveResult.IsSuccess)
-                {
-                    HasError = true;
-                    ErrorMessage = $"Failed to create default profile: {saveResult.ErrorMessage}";
-                    return;
-                }
-
-                profiles = [defaultProfile];
+                HasError = true;
+                ErrorMessage = "No profile selected. Load or create a profile first.";
+                return;
             }
 
-            var profile = profiles[0];
-
-            var prepareResult = await _sessionService.PrepareAsync(profile.LaunchChain, CancellationToken.None);
+            var prepareResult = await _sessionService.PrepareAsync(SelectedProfile.LaunchChain, CancellationToken.None);
             if (!prepareResult.IsSuccess)
             {
                 HasError = true;
@@ -295,5 +355,22 @@ public class RecorderViewModel : ViewModelBase
         HasError = false;
         ErrorMessage = string.Empty;
         StatusMessage = "Ready";
+        UpdateAllStates();
+    }
+
+    private static ApplicationProfile CreateDefaultProfile()
+    {
+        return new ApplicationProfile(
+            Guid.NewGuid(),
+            "Notepad",
+            "Launches Windows Notepad for simple UI recording tests",
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            new ApplicationLaunchChain([
+                new LaunchStep(1, "Notepad", "notepad.exe", null, null,
+                    new ReadinessCondition(ConditionType.ProcessStarted, null, null,
+                        null, null, null, null, null, null, null),
+                    null, true)
+            ]));
     }
 }

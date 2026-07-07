@@ -1,6 +1,7 @@
 namespace WindowsUiFlowRecorder.Presentation;
 
 using System.Windows;
+using System.Windows.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using WindowsUiFlowRecorder.Domain.Common;
 using WindowsUiFlowRecorder.Presentation.Recorder;
@@ -20,7 +21,6 @@ public partial class MainWindow : Window
 
         _recorderViewModel = App.ServiceProvider.GetRequiredService<RecorderViewModel>();
         _scannerViewModel = App.ServiceProvider.GetRequiredService<ScannerViewModel>();
-        DataContext = _recorderViewModel;
 
         _recorderViewModel.PropertyChanged += (_, e) =>
         {
@@ -39,7 +39,20 @@ public partial class MainWindow : Window
             _overlay = new RecordingOverlay();
             _highlight = new ElementHighlightWindow();
             HandleStateChange(_recorderViewModel.State);
+            _ = _recorderViewModel.LoadProfilesAsync();
         };
+    }
+
+    private void OnTabChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (e.Source is TabControl tabControl)
+        {
+            var selectedItem = tabControl.SelectedItem as TabItem;
+            if (selectedItem?.Header?.ToString() == "Flow Recorder")
+            {
+                _ = _recorderViewModel.LoadProfilesAsync();
+            }
+        }
     }
 
     private void HandleStateChange(RecordingSessionState state)
