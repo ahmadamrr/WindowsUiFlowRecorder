@@ -17,5 +17,6 @@ public record ElementInformation(
     IReadOnlyList<string> SupportedPatterns,
     string? ValueOrText,
     int DepthInTree,
+    int ProcessId,
     IReadOnlyList<ElementInformation> Children
 );

@@ -63,5 +63,5 @@ public class ActionCoalescingPolicyTests
     private static ElementInfo CreateTestElement() => new(
         "test-id", "btnTest", "Test Button", "Button", null, null, null,
         true, false, true, new BoundingRectangle(0, 0, 100, 30),
-        ["Invoke"], null, 0, []);
+        ["Invoke"], null, 0, 0, []);
 }

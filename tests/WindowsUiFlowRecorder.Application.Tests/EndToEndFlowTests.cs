@@ -77,7 +77,7 @@ public class EndToEndFlowTests
         var testElement = new ElementInfo(
             "btn1", "button1", "OK", "Button", null, null, null,
             true, false, true, new BoundingRectangle(100, 100, 80, 30),
-            ["Invoke"], null, 2, []);
+            ["Invoke"], null, 2, 0, []);
 
         uiaMock.Setup(u => u.GetElementAtPointAsync(It.IsAny<ScreenPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<ElementInfo>.Success(testElement));

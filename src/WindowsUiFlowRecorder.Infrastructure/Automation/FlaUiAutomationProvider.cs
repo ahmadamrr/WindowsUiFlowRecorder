@@ -59,6 +59,34 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
         }
     }
 
+    public Task<Result<WindowSnapshot>> GetWindowAtPointAsync(
+        ScreenPoint point, int maxElementCount, CancellationToken ct)
+    {
+        try
+        {
+            var element = _automation.FromPoint(new Point(point.X, point.Y));
+            if (element == null)
+                return Task.FromResult(Result<WindowSnapshot>.Failure(
+                    FailureReason.WindowNotFound, "No window at point"));
+
+            var pid = element.Properties.ProcessId;
+            int[] pids = [pid.ValueOrDefault];
+            var windowHandle = FindWindowForProcess(pids);
+
+            if (windowHandle == IntPtr.Zero)
+                return Task.FromResult(Result<WindowSnapshot>.Failure(
+                    FailureReason.WindowNotFound, "No window found for element's process"));
+
+            return WalkHierarchyAsync(windowHandle, maxElementCount, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get window at point ({X},{Y})", point.X, point.Y);
+            return Task.FromResult(Result<WindowSnapshot>.Failure(
+                FailureReason.WindowNotFound, ex.Message));
+        }
+    }
+
     public Task<Result<WindowSnapshot>> WalkHierarchyAsync(
         IntPtr windowHandle, int maxElementCount, CancellationToken ct)
     {
@@ -132,6 +160,8 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
                 })
                 .ToList();
 
+            var pid = element.Properties.ProcessId.ValueOrDefault;
+
             return new ElementInfo(
                 element.AutomationId ?? Guid.NewGuid().ToString(),
                 element.AutomationId,
@@ -148,6 +178,7 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
                 patterns,
                 null,
                 depth,
+                pid,
                 children);
         }
         catch
@@ -159,7 +190,7 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
     private static ElementInfo CreateTruncatedElement(int depth) => new(
         Guid.NewGuid().ToString(), null, null, "Unknown",
         null, null, null, false, false, false,
-        new BoundingRectangle(0, 0, 0, 0), [], null, depth, []);
+        new BoundingRectangle(0, 0, 0, 0), [], null, depth, 0, []);
 
     public Task<Result> SubscribeToEventsAsync(
         IReadOnlyList<TargetApplicationContext> contexts,
@@ -185,6 +216,9 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
             var desktop = _automation.GetDesktop();
             var allWindows = desktop.FindAllChildren();
 
+            var pid = element.ProcessId;
+            var specificPids = pid > 0 ? new[] { pid } : Array.Empty<int>();
+
             AutomationElement? bestMatch = null;
             var bestScore = 0;
 
@@ -193,6 +227,10 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
                 try
                 {
                     if (!w.Properties.IsControlElement.ValueOrDefault)
+                        continue;
+
+                    var winPid = w.Properties.ProcessId.ValueOrDefault;
+                    if (specificPids.Length > 0 && !specificPids.Contains(winPid))
                         continue;
 
                     var score = 0;
@@ -225,6 +263,13 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
                     return WalkHierarchyAsync((IntPtr)handle.ValueOrDefault, 5000, ct);
             }
 
+            if (specificPids.Length > 0)
+            {
+                var handle = FindWindowForProcess(specificPids);
+                if (handle != IntPtr.Zero)
+                    return WalkHierarchyAsync(handle, 5000, ct);
+            }
+
             foreach (var w in allWindows)
             {
                 try
@@ -245,6 +290,29 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
             return Task.FromResult(Result<WindowSnapshot>.Failure(
                 FailureReason.WindowNotFound, ex.Message));
         }
+    }
+
+    private IntPtr FindWindowForProcess(int[] processIds)
+    {
+        var desktop = _automation.GetDesktop();
+        var allWindows = desktop.FindAllChildren();
+
+        foreach (var w in allWindows)
+        {
+            try
+            {
+                var pid = w.Properties.ProcessId.ValueOrDefault;
+                if (processIds.Contains(pid))
+                {
+                    var handle = w.Properties.NativeWindowHandle;
+                    if (handle.ValueOrDefault != 0)
+                        return (IntPtr)handle.ValueOrDefault;
+                }
+            }
+            catch { }
+        }
+
+        return IntPtr.Zero;
     }
 
     public void Dispose()

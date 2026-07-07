@@ -486,10 +486,24 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
 
             if (last.ScreenPosition.HasValue)
             {
-                var elementResult = await _uiAutomation.GetElementAtPointAsync(
-                    last.ScreenPosition.Value, ct);
-                if (elementResult.IsSuccess)
-                    targetElement = elementResult.Value;
+                var maxElements = GetMaxElementCount(settings);
+                var windowResult = await _uiAutomation.GetWindowAtPointAsync(
+                    last.ScreenPosition.Value, maxElements, ct);
+                if (windowResult.IsSuccess)
+                {
+                    var snapshot = windowResult.Value;
+                    windowId = snapshot.WindowId;
+                    applicationTag = snapshot.ApplicationTag;
+                    targetElement = snapshot.RootElement;
+                    await ApplyWindowSnapshotAsync(snapshot, settings);
+                }
+                else
+                {
+                    var elementResult = await _uiAutomation.GetElementAtPointAsync(
+                        last.ScreenPosition.Value, ct);
+                    if (elementResult.IsSuccess)
+                        targetElement = elementResult.Value;
+                }
             }
             else if (first.EventType is InputEventType.KeyDown or InputEventType.KeyUp or InputEventType.FocusGained)
             {
@@ -531,7 +545,7 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
             var action = ActionCoalescingPolicy.Coalesce(
                 events.AsReadOnly(),
                 targetElement ?? new ElementInfo("unknown", null, null, "Unknown", null, null, null,
-                    false, false, false, new BoundingRectangle(0, 0, 0, 0), [], null, 0, []),
+                    false, false, false, new BoundingRectangle(0, 0, 0, 0), [], null, 0, 0, []),
                 windowId,
                 applicationTag,
                 seq);
@@ -575,8 +589,13 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                 var elapsed = (DateTime.UtcNow - _inputHook.LastHeartbeatUtc).TotalSeconds;
                 if (elapsed > HeartbeatThresholdSeconds && CurrentState == RecordingSessionState.Recording)
                 {
-                    _logger.LogWarning("Input hook heartbeat stale ({Elapsed:F1}s) - capture may be incomplete", elapsed);
-                    ErrorOccurred?.Invoke("Input hook may be disconnected. Capture may be incomplete.");
+                    _logger.LogWarning("No input detected for {Elapsed:F0}s (hook heartbeat stale)", elapsed);
+                    if (elapsed > HeartbeatThresholdSeconds * 3)
+                    {
+                        ErrorOccurred?.Invoke(
+                            "No input detected for a long time. If you are actively using the target application, " +
+                            "the input hook may need to be restarted. Try pausing and resuming the session.");
+                    }
                 }
             }
             catch (OperationCanceledException)

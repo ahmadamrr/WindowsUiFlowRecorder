@@ -43,10 +43,10 @@ public class HierarchyRecapturePolicyTests
         var element = new ElementInfo(
             "root", null, null, "Window", null, null, null,
             true, false, false, new BoundingRectangle(0, 0, 800, 600),
-            [], null, 0,
+            [], null, 0, 0,
         [
             new ElementInfo("btn1", "submitBtn", "Submit", "Button", null, null, null,
-                true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 1, [])
+                true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 1, 0, [])
         ]);
 
         var fp1 = HierarchyRecapturePolicy.ComputeFingerprint(element);
@@ -61,22 +61,22 @@ public class HierarchyRecapturePolicyTests
         var elementA = new ElementInfo(
             "root", null, null, "Window", null, null, null,
             true, false, false, new BoundingRectangle(0, 0, 800, 600),
-            [], null, 0,
+            [], null, 0, 0,
         [
             new ElementInfo("btn1", "submitBtn", "Submit", "Button", null, null, null,
-                true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 1, [])
+                true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 1, 0, [])
         ]);
 
         var elementB = new ElementInfo(
             "root", null, null, "Window", null, null, null,
             true, false, false, new BoundingRectangle(0, 0, 800, 600),
-            [], null, 0,
+            [], null, 0, 0,
         [
             new ElementInfo("btn1", "submitBtn", "Submit", "Button", null, null, null,
-                true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 1,
+                true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 1, 0,
             [
                 new ElementInfo("inner1", "childEdit", "Child", "Edit", null, null, null,
-                    true, false, true, new BoundingRectangle(20, 20, 200, 20), ["Value"], null, 2, [])
+                    true, false, true, new BoundingRectangle(20, 20, 200, 20), ["Value"], null, 2, 0, [])
             ])
         ]);
 
@@ -91,11 +91,11 @@ public class HierarchyRecapturePolicyTests
     {
         var elementWithIdA = new ElementInfo(
             "btn1", "oldId", "OK", "Button", null, null, null,
-            true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 0, []);
+            true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 0, 0, []);
 
         var elementWithIdB = new ElementInfo(
             "btn1", "newId", "OK", "Button", null, null, null,
-            true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 0, []);
+            true, false, true, new BoundingRectangle(10, 10, 80, 30), ["Invoke"], null, 0, 0, []);
 
         var fpA = HierarchyRecapturePolicy.ComputeFingerprint(elementWithIdA);
         var fpB = HierarchyRecapturePolicy.ComputeFingerprint(elementWithIdB);
@@ -109,15 +109,15 @@ public class HierarchyRecapturePolicyTests
         var flat = new ElementInfo(
             "root", null, null, "Window", null, null, null,
             true, false, false, new BoundingRectangle(0, 0, 800, 600),
-            [], null, 0, []);
+            [], null, 0, 0, []);
 
         var nested = new ElementInfo(
             "root", null, null, "Window", null, null, null,
             true, false, false, new BoundingRectangle(0, 0, 800, 600),
-            [], null, 0,
+            [], null, 0, 0,
         [
             new ElementInfo("child1", null, null, "Pane", null, null, null,
-                true, false, false, new BoundingRectangle(0, 0, 800, 600), [], null, 1, [])
+                true, false, false, new BoundingRectangle(0, 0, 800, 600), [], null, 1, 0, [])
         ]);
 
         var fpFlat = HierarchyRecapturePolicy.ComputeFingerprint(flat);
@@ -144,12 +144,12 @@ public class HierarchyRecapturePolicyTests
             .Select(i => new ElementInfo(
                 $"child{i}", $"autoId{i}", $"Name{i}", "Button", null, null, null,
                 true, false, true, new BoundingRectangle(i * 10, 0, 80, 30),
-                ["Invoke"], null, 1, []))
+                ["Invoke"], null, 1, 0, []))
             .ToList();
 
         return new ElementInfo(
             "root", null, "Root", "Window", null, null, null,
             true, false, false, new BoundingRectangle(0, 0, 1024, 768),
-            [], null, 0, children);
+            [], null, 0, 0, children);
     }
 }

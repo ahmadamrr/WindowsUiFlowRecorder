@@ -182,6 +182,7 @@ public class ExportService : IExportService
         e.ElementId, e.AutomationId, e.Name, e.ControlType, e.LocalizedControlType,
         e.ClassName, e.HelpText, e.IsEnabled, e.IsOffscreen, e.IsKeyboardFocusable,
         e.BoundingRectangle, e.SupportedPatterns, e.ValueOrText, e.DepthInTree,
+        e.ProcessId,
         e.Children.Select(MapElement).ToList());
 }
 

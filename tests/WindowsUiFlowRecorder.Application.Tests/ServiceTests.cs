@@ -170,7 +170,7 @@ public class UiScanServiceTests
         new BoundingRectangle(0, 0, 800, 600),
         DateTime.UtcNow, DateTime.UtcNow, 1,
         new ElementInfo("root", null, null, "Window", null, null, null,
-            true, false, false, new BoundingRectangle(0, 0, 800, 600), [], null, 0, []),
+            true, false, false, new BoundingRectangle(0, 0, 800, 600), [], null, 0, 0, []),
         new StructuralFingerprint("test"));
 }
 
@@ -294,7 +294,7 @@ public class ExportServiceTests
             ActionType.Click, "TestApp", Guid.NewGuid(),
             new ElementInfo("btn1", "button1", "OK", "Button", null, null, null,
                 true, false, false, new BoundingRectangle(100, 100, 50, 20),
-                ["Invoke"], null, 1, []),
+                ["Invoke"], null, 1, 0, []),
             [], new ScreenPoint(120, 110), null, null, null, null, null));
 
         return session;
@@ -305,6 +305,6 @@ public class ExportServiceTests
         new BoundingRectangle(0, 0, 800, 600),
         DateTime.UtcNow, DateTime.UtcNow, 1,
         new ElementInfo("root", null, null, "Window", null, null, null,
-            true, false, false, new BoundingRectangle(0, 0, 800, 600), [], null, 0, []),
+            true, false, false, new BoundingRectangle(0, 0, 800, 600), [], null, 0, 0, []),
         new StructuralFingerprint("test"));
 }
