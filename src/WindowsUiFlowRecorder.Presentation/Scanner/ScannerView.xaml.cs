@@ -2,11 +2,13 @@ namespace WindowsUiFlowRecorder.Presentation.Scanner;
 
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 public partial class ScannerView : UserControl
 {
     public ScannerView()
     {
+        DataContext = App.ServiceProvider.GetRequiredService<ScannerViewModel>();
         InitializeComponent();
 
         Loaded += async (_, _) =>

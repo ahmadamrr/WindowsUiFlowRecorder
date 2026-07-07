@@ -136,7 +136,7 @@ public class ProfileManagerViewModel : ViewModelBase
         if (SelectedProfile == null || string.IsNullOrWhiteSpace(DuplicateName)) return;
 
         var result = await _profileService.DuplicateProfileAsync(
-            SelectedProfile.SessionId, DuplicateName);
+            SelectedProfile.ProfileId, DuplicateName);
 
         if (result.IsSuccess && result.Value != null)
         {
@@ -153,7 +153,7 @@ public class ProfileManagerViewModel : ViewModelBase
     {
         if (SelectedProfile == null) return;
 
-        var result = await _profileService.DeleteProfileAsync(SelectedProfile.SessionId);
+        var result = await _profileService.DeleteProfileAsync(SelectedProfile.ProfileId);
         if (result.IsSuccess)
         {
             Profiles.Remove(SelectedProfile);
@@ -177,7 +177,7 @@ public class ProfileItemViewModel : ViewModelBase
     private string _name;
     private string? _description;
 
-    public Guid SessionId { get; }
+    public Guid ProfileId { get; }
     public ApplicationProfile Source { get; }
     public string Name { get => _name; set => SetProperty(ref _name, value); }
     public string? Description { get => _description; set => SetProperty(ref _description, value); }
@@ -188,7 +188,7 @@ public class ProfileItemViewModel : ViewModelBase
     public ProfileItemViewModel(ApplicationProfile profile)
     {
         Source = profile;
-        SessionId = profile.ProfileId;
+        ProfileId = profile.ProfileId;
         _name = profile.Name;
         _description = profile.Description;
     }

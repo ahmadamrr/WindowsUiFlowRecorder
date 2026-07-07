@@ -1,11 +1,13 @@
 namespace WindowsUiFlowRecorder.Presentation.Settings;
 
 using System.Windows.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 public partial class SettingsView : UserControl
 {
     public SettingsView()
     {
+        DataContext = App.ServiceProvider.GetRequiredService<SettingsViewModel>();
         InitializeComponent();
 
         Loaded += async (_, _) =>
