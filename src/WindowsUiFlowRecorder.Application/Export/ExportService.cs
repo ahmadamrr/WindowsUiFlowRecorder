@@ -11,11 +11,13 @@ public class ExportService : IExportService
     private readonly ILogger<ExportService> _logger;
 
     private const string CurrentSchemaVersion = "1.0.0";
+    private readonly int _recorderProcessId;
 
     public ExportService(IExportWriter writer, ILogger<ExportService> logger)
     {
         _writer = writer;
         _logger = logger;
+        _recorderProcessId = Environment.ProcessId;
     }
 
     public async Task<Result> ExportSessionAsync(
@@ -132,6 +134,7 @@ public class ExportService : IExportService
             .ToList();
 
         var windows = session.Windows.Values
+            .Where(w => w.ProcessId != _recorderProcessId)
             .Select(MapWindow)
             .ToList();
 

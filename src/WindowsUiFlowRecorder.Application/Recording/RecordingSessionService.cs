@@ -30,7 +30,8 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
     private readonly ConcurrentQueue<RawInputEvent> _inputQueue = new();
     private int _sequenceNumber;
 
-    private const int HeartbeatThresholdSeconds = 5;
+    private const int HeartbeatThresholdSeconds = 15;
+    private readonly int _recorderProcessId;
 
     public RecordingSessionState CurrentState { get; private set; } = RecordingSessionState.Idle;
     public RecordingSession? CurrentSession => _session;
@@ -57,6 +58,7 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
         _sessionRepository = sessionRepository;
         _settingsService = settingsService;
         _logger = logger;
+        _recorderProcessId = Environment.ProcessId;
     }
 
     public Task<Result> PrepareAsync(ApplicationLaunchChain launchChain, CancellationToken ct)
@@ -483,6 +485,7 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
             ElementInfo? targetElement = null;
             Guid windowId = Guid.Empty;
             string applicationTag = "Unknown";
+            int elementProcessId = 0;
 
             if (last.ScreenPosition.HasValue)
             {
@@ -492,6 +495,11 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                 if (windowResult.IsSuccess)
                 {
                     var snapshot = windowResult.Value;
+                    elementProcessId = snapshot.ProcessId;
+
+                    if (elementProcessId == _recorderProcessId)
+                        return;
+
                     windowId = snapshot.WindowId;
                     applicationTag = snapshot.ApplicationTag;
                     targetElement = snapshot.RootElement;
@@ -502,14 +510,20 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                     var elementResult = await _uiAutomation.GetElementAtPointAsync(
                         last.ScreenPosition.Value, ct);
                     if (elementResult.IsSuccess)
+                    {
                         targetElement = elementResult.Value;
+                        elementProcessId = targetElement.ProcessId;
+                    }
                 }
             }
             else if (first.EventType is InputEventType.KeyDown or InputEventType.KeyUp or InputEventType.FocusGained)
             {
                 var focusResult = await _uiAutomation.GetFocusedElementAsync(ct);
                 if (focusResult.IsSuccess)
+                {
                     targetElement = focusResult.Value;
+                    elementProcessId = targetElement.ProcessId;
+                }
             }
             else if (first.EventType == InputEventType.WindowActivated)
             {
@@ -521,24 +535,40 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                     if (winResult.IsSuccess)
                     {
                         var snapshot = winResult.Value;
+                        elementProcessId = snapshot.ProcessId;
+
+                        if (elementProcessId == _recorderProcessId)
+                            return;
+
                         windowId = snapshot.WindowId;
                         targetElement = snapshot.RootElement;
                         applicationTag = snapshot.ApplicationTag;
-
                         await ApplyWindowSnapshotAsync(snapshot, settings);
                     }
                 }
             }
+
+            if (elementProcessId == _recorderProcessId)
+                return;
 
             if (targetElement != null && windowId == Guid.Empty)
             {
                 var owningResult = await _uiAutomation.GetOwningWindowAsync(targetElement, ct);
                 if (owningResult.IsSuccess)
                 {
-                    windowId = owningResult.Value.WindowId;
-                    applicationTag = owningResult.Value.ApplicationTag;
-                    await ApplyWindowSnapshotAsync(owningResult.Value, settings);
+                    var snapshot = owningResult.Value;
+                    if (snapshot.ProcessId == _recorderProcessId)
+                        return;
+
+                    windowId = snapshot.WindowId;
+                    applicationTag = snapshot.ApplicationTag;
+                    await ApplyWindowSnapshotAsync(snapshot, settings);
                 }
+            }
+
+            if (string.IsNullOrEmpty(applicationTag) || applicationTag == "Unknown")
+            {
+                applicationTag = ResolveDefaultApplicationTag();
             }
 
             var seq = Interlocked.Increment(ref _sequenceNumber);
@@ -593,8 +623,8 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                     if (elapsed > HeartbeatThresholdSeconds * 3)
                     {
                         ErrorOccurred?.Invoke(
-                            "No input detected for a long time. If you are actively using the target application, " +
-                            "the input hook may need to be restarted. Try pausing and resuming the session.");
+                            "No input detected for a while. If you are actively using the target application, " +
+                            "try clicking on it to ensure it has focus, or pause and resume the session.");
                     }
                 }
             }
@@ -607,6 +637,11 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
 
     private async Task ApplyWindowSnapshotAsync(WindowSnapshot snapshot, Settings? settings)
     {
+        if (snapshot.ProcessId == _recorderProcessId)
+        {
+            _logger.LogDebug("Skipping Recorder's own window: {Title}", snapshot.Title);
+            return;
+        }
         var minInterval = GetMinimumRecaptureInterval(
             settings?.HierarchyRecaptureSensitivity ?? HierarchyRecaptureSensitivity.Medium);
 
@@ -661,6 +696,19 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
 
     private int GetMaxElementCount(Settings? settings)
         => settings?.MaxHierarchyElementCount ?? 5000;
+
+    private string ResolveDefaultApplicationTag()
+    {
+        lock (_lock)
+        {
+            if (_session == null || _session.TargetApplicationContexts.Count == 0)
+                return "TargetApp";
+
+            var active = _session.TargetApplicationContexts.FirstOrDefault(c => c.IsActive);
+            return active?.ApplicationTag
+                ?? _session.TargetApplicationContexts[0].ApplicationTag;
+        }
+    }
 
     private void SetState(RecordingSessionState newState)
     {

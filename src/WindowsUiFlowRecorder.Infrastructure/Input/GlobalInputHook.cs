@@ -15,6 +15,8 @@ public class GlobalInputHook : IGlobalInputHook, IDisposable
     private LowLevelKeyboardProc? _keyboardProc;
     private LowLevelMouseProc? _mouseProc;
     private Action<RawInputEvent>? _callback;
+    private Thread? _hookThread;
+    private CancellationTokenSource? _threadCts;
     private bool _disposed;
 
     public DateTime LastHeartbeatUtc { get; private set; }
@@ -28,27 +30,94 @@ public class GlobalInputHook : IGlobalInputHook, IDisposable
     public Task SubscribeAsync(Action<RawInputEvent> onInputEvent, CancellationToken ct)
     {
         _callback = onInputEvent;
-        _keyboardProc = KeyboardHookCallback;
-        _mouseProc = MouseHookCallback;
+        _threadCts = new CancellationTokenSource();
 
         using var curProcess = Process.GetCurrentProcess();
         using var mainModule = curProcess.MainModule!;
         var moduleHandle = GetModuleHandle(mainModule.ModuleName);
 
-        _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, _keyboardProc, moduleHandle, 0);
-        _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, _mouseProc, moduleHandle, 0);
+        var setupEvent = new ManualResetEventSlim(false);
+        Exception? setupException = null;
+
+        _hookThread = new Thread(() =>
+        {
+            try
+            {
+                _keyboardProc = KeyboardHookCallback;
+                _mouseProc = MouseHookCallback;
+
+                _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, _keyboardProc, moduleHandle, 0);
+                _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, _mouseProc, moduleHandle, 0);
+
+                setupException = null;
+                setupEvent.Set();
+
+                if (_keyboardHookId == IntPtr.Zero && _mouseHookId == IntPtr.Zero)
+                    return;
+
+                while (!_threadCts!.Token.IsCancellationRequested)
+                {
+                    if (!PeekMessage(out var msg, IntPtr.Zero, 0, 0, PM_REMOVE))
+                    {
+                        Thread.Sleep(1);
+                        continue;
+                    }
+
+                    TranslateMessage(ref msg);
+                    DispatchMessage(ref msg);
+                }
+            }
+            catch (Exception ex)
+            {
+                setupException = ex;
+                setupEvent.Set();
+                _logger.LogError(ex, "Hook thread error");
+            }
+            finally
+            {
+                UninstallHooks();
+            }
+        })
+        {
+            Name = "GlobalInputHook",
+            IsBackground = true
+        };
+
+        _hookThread.SetApartmentState(ApartmentState.STA);
+        _hookThread.Start();
+
+        if (!setupEvent.Wait(5000))
+        {
+            _logger.LogError("Hook thread failed to start within 5s");
+            return Task.FromCanceled(ct);
+        }
+
+        if (setupException != null)
+        {
+            _logger.LogError(setupException, "Hook thread setup failed");
+            return Task.FromException(setupException);
+        }
 
         if (_keyboardHookId == IntPtr.Zero)
             _logger.LogError("Failed to install keyboard hook (error {Error})", Marshal.GetLastWin32Error());
         if (_mouseHookId == IntPtr.Zero)
             _logger.LogError("Failed to install mouse hook (error {Error})", Marshal.GetLastWin32Error());
 
-        _logger.LogInformation("Global input hooks installed (kb:{Kb}, mouse:{Mouse})",
+        _logger.LogInformation("Global input hooks installed on dedicated thread (kb:{Kb}, mouse:{Mouse})",
             _keyboardHookId != IntPtr.Zero, _mouseHookId != IntPtr.Zero);
         return Task.CompletedTask;
     }
 
     public Task UnsubscribeAsync()
+    {
+        _threadCts?.Cancel();
+        _hookThread?.Join(2000);
+        _hookThread = null;
+        _logger.LogInformation("Global input hooks removed");
+        return Task.CompletedTask;
+    }
+
+    private void UninstallHooks()
     {
         if (_keyboardHookId != IntPtr.Zero)
         {
@@ -60,8 +129,6 @@ public class GlobalInputHook : IGlobalInputHook, IDisposable
             UnhookWindowsHookEx(_mouseHookId);
             _mouseHookId = IntPtr.Zero;
         }
-        _logger.LogInformation("Global input hooks removed");
-        return Task.CompletedTask;
     }
 
     private IntPtr KeyboardHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
@@ -133,6 +200,7 @@ public class GlobalInputHook : IGlobalInputHook, IDisposable
     private const int WM_RBUTTONUP = 0x0205;
     private const int WM_MOUSEMOVE = 0x0200;
     private const int LLMHF_INJECTED = 0x00000001;
+    private const uint PM_REMOVE = 0x0001;
 
     private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
     private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
@@ -152,6 +220,28 @@ public class GlobalInputHook : IGlobalInputHook, IDisposable
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool PeekMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
+
+    [DllImport("user32.dll")]
+    private static extern bool TranslateMessage(ref MSG lpMsg);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr DispatchMessage(ref MSG lpMsg);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MSG
+    {
+        public IntPtr hwnd;
+        public uint message;
+        public IntPtr wParam;
+        public IntPtr lParam;
+        public uint time;
+        public int ptX;
+        public int ptY;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct POINT
@@ -175,6 +265,7 @@ public class GlobalInputHook : IGlobalInputHook, IDisposable
         if (!_disposed)
         {
             UnsubscribeAsync().GetAwaiter().GetResult();
+            _threadCts?.Dispose();
             _disposed = true;
         }
     }
