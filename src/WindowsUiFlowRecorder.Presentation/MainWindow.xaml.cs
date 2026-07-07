@@ -17,10 +17,10 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
-        InitializeComponent();
-
         _recorderViewModel = App.ServiceProvider.GetRequiredService<RecorderViewModel>();
         _scannerViewModel = App.ServiceProvider.GetRequiredService<ScannerViewModel>();
+
+        InitializeComponent();
 
         _recorderViewModel.PropertyChanged += (_, e) =>
         {
@@ -39,7 +39,6 @@ public partial class MainWindow : Window
             _overlay = new RecordingOverlay();
             _highlight = new ElementHighlightWindow();
             HandleStateChange(_recorderViewModel.State);
-            _ = _recorderViewModel.LoadProfilesAsync();
         };
     }
 

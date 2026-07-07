@@ -3,6 +3,7 @@ namespace WindowsUiFlowRecorder.Presentation.Recorder;
 using System.Collections.ObjectModel;
 using System.IO;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 using WindowsUiFlowRecorder.Application.Profiles;
 using WindowsUiFlowRecorder.Application.Recording;
 using WindowsUiFlowRecorder.Domain.Common;
@@ -28,6 +29,7 @@ public class RecorderViewModel : ViewModelBase
     private bool _canExport;
     private bool _canNewSession;
     private ApplicationProfile? _selectedProfile;
+    private bool _profilesLoaded;
 
     public ObservableCollection<ApplicationProfile> Profiles { get; } = [];
 
@@ -103,6 +105,12 @@ public class RecorderViewModel : ViewModelBase
         private set { SetProperty(ref _canNewSession, value); RefreshCommands(); }
     }
 
+    public bool ProfilesLoaded
+    {
+        get => _profilesLoaded;
+        private set => SetProperty(ref _profilesLoaded, value);
+    }
+
     public ApplicationProfile? SelectedProfile
     {
         get => _selectedProfile;
@@ -145,32 +153,64 @@ public class RecorderViewModel : ViewModelBase
 
     public async Task LoadProfilesAsync()
     {
-        var result = await _profileService.GetAllProfilesAsync();
-        Profiles.Clear();
-        if (result.IsSuccess && result.Value != null)
+        try
         {
-            foreach (var p in result.Value)
-                Profiles.Add(p);
+            _logger.LogInformation("Loading profiles...");
+            var result = await _profileService.GetAllProfilesAsync();
 
-            if (Profiles.Count > 0)
-                SelectedProfile = Profiles[0];
-        }
+            Profiles.Clear();
+            SelectedProfile = null;
 
-        if (Profiles.Count == 0)
-        {
-            var defaultProfile = CreateDefaultProfile();
-            var saveResult = await _profileService.SaveProfileAsync(defaultProfile);
-            if (saveResult.IsSuccess)
+            if (result.IsSuccess && result.Value != null)
             {
-                Profiles.Add(defaultProfile);
-                SelectedProfile = defaultProfile;
-                _logger.LogInformation("Created default profile for Notepad");
+                var list = result.Value.ToList();
+                _logger.LogInformation("Got {Count} profiles from service", list.Count);
+
+                foreach (var p in list)
+                    Profiles.Add(p);
+
+                if (Profiles.Count > 0)
+                {
+                    SelectedProfile = Profiles[0];
+                    _logger.LogInformation("Selected profile: {Name}", Profiles[0].Name);
+                }
             }
             else
             {
-                HasError = true;
-                ErrorMessage = $"Failed to create default profile: {saveResult.ErrorMessage}";
+                _logger.LogWarning("Failed to load profiles: {Error}", result.ErrorMessage);
             }
+
+            if (Profiles.Count == 0)
+            {
+                _logger.LogInformation("No profiles found, creating default Notepad profile");
+                var defaultProfile = CreateDefaultProfile();
+                var saveResult = await _profileService.SaveProfileAsync(defaultProfile);
+
+                if (saveResult.IsSuccess)
+                {
+                    Profiles.Add(defaultProfile);
+                    SelectedProfile = defaultProfile;
+                    _logger.LogInformation("Default Notepad profile created and selected");
+                }
+                else
+                {
+                    HasError = true;
+                    ErrorMessage = $"Failed to create default profile: {saveResult.ErrorMessage}";
+                    _logger.LogError("Failed to create default profile: {Error}", saveResult.ErrorMessage);
+                }
+            }
+
+            ProfilesLoaded = true;
+            StatusMessage = Profiles.Count > 0
+                ? $"{Profiles.Count} profile(s) loaded. Selected: {SelectedProfile?.Name ?? "(none)"}"
+                : "No profiles available";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading profiles");
+            HasError = true;
+            ErrorMessage = $"Error loading profiles: {ex.Message}";
+            ProfilesLoaded = true;
         }
 
         RefreshCommands();

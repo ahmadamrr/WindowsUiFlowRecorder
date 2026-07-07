@@ -5,6 +5,7 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="2*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -23,8 +24,44 @@
             </Grid>
         </Border>
 
-        <ListBox Grid.Row="1" ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}"
-                 Background="#1E1E1E" BorderBrush="#444" Margin="0,8,0,8">
+        <Border Grid.Row="1" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="8"
+                Background="#1A1A1A" Margin="0,8,0,8">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="Create New Profile" FontSize="14" FontWeight="SemiBold" Foreground="#CCC" Margin="0,0,0,8"/>
+
+                <Grid Grid.Row="1" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Name:" Foreground="#AAA" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1" Text="{Binding NewProfileName}" Background="#333" Foreground="#CCC" BorderThickness="0" Padding="4"/>
+                    <Button Grid.Column="2" Content="Create" Command="{Binding CreateProfileCommand}"
+                            Background="#28A745" Foreground="White" BorderThickness="0" Padding="12,4" Margin="4,0"/>
+                </Grid>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Exe Path:" Foreground="#AAA" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1" Text="{Binding NewProfileExePath}" Background="#333" Foreground="#CCC" BorderThickness="0" Padding="4"/>
+                    <Button Grid.Column="2" Content="Browse..." Command="{Binding BrowseExeCommand}"
+                            Background="#555" Foreground="White" BorderThickness="0" Padding="8,4" Margin="4,0"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <ListBox Grid.Row="2" ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}"
+                 Background="#1E1E1E" BorderBrush="#444">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type profiles:ProfileItemViewModel}">
                     <Border Padding="8" Margin="2" Background="#2D2D30" CornerRadius="4">
@@ -32,24 +69,26 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <TextBlock Grid.Row="0" Text="{Binding DisplayText}" FontWeight="SemiBold" Foreground="#EEE" FontSize="13"/>
-                            <TextBlock Grid.Row="1" Text="{Binding Description, TargetNullValue='(no description)'}"
-                                       Foreground="#888" FontSize="11" FontStyle="Italic"/>
+                            <TextBlock Grid.Row="1" Text="{Binding ExePath}" Foreground="#888" FontSize="11" FontFamily="Consolas"/>
+                            <TextBlock Grid.Row="2" Text="{Binding Description, TargetNullValue='(no description)'}"
+                                       Foreground="#666" FontSize="11" FontStyle="Italic"/>
                         </Grid>
                     </Border>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Border Grid.Row="2" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="8" Background="#1A1A1A" Margin="0,0,0,8">
+        <Border Grid.Row="3" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="8" Background="#1A1A1A" Margin="0,8,0,8">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="Edit Profile" FontSize="14" FontWeight="SemiBold" Foreground="#CCC" Margin="0,0,0,8"/>
+                <TextBlock Grid.Row="0" Text="Edit Selected Profile" FontSize="14" FontWeight="SemiBold" Foreground="#CCC" Margin="0,0,0,8"/>
                 <Grid Grid.Row="1" Margin="0,0,0,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="80"/>
@@ -72,7 +111,7 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="3" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="8" Background="#1A1A1A">
+        <Border Grid.Row="4" BorderBrush="#444" BorderThickness="1" CornerRadius="4" Padding="8" Background="#1A1A1A">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -87,7 +126,7 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="4" Background="#007ACC" Padding="8" CornerRadius="4" Margin="0,8,0,0">
+        <Border Grid.Row="5" Background="#007ACC" Padding="8" CornerRadius="4" Margin="0,8,0,0">
             <TextBlock Text="{Binding StatusMessage, StringFormat='Status: {0}'}" Foreground="White" FontSize="12"/>
         </Border>
     </Grid>

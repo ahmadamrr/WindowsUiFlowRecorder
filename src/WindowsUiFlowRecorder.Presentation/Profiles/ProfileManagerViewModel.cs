@@ -1,7 +1,9 @@
 namespace WindowsUiFlowRecorder.Presentation.Profiles;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 using WindowsUiFlowRecorder.Application.Profiles;
+using WindowsUiFlowRecorder.Domain.Common;
 using WindowsUiFlowRecorder.Domain.Entities;
 using WindowsUiFlowRecorder.Presentation.Shared;
 
@@ -16,6 +18,8 @@ public class ProfileManagerViewModel : ViewModelBase
     private string _editName = string.Empty;
     private string _editDescription = string.Empty;
     private string _duplicateName = string.Empty;
+    private string _newProfileName = string.Empty;
+    private string _newProfileExePath = string.Empty;
 
     public System.Collections.ObjectModel.ObservableCollection<ProfileItemViewModel> Profiles { get; } = [];
 
@@ -64,10 +68,24 @@ public class ProfileManagerViewModel : ViewModelBase
         set => SetProperty(ref _duplicateName, value);
     }
 
+    public string NewProfileName
+    {
+        get => _newProfileName;
+        set => SetProperty(ref _newProfileName, value);
+    }
+
+    public string NewProfileExePath
+    {
+        get => _newProfileExePath;
+        set => SetProperty(ref _newProfileExePath, value);
+    }
+
     public AsyncRelayCommand RefreshCommand { get; }
     public AsyncRelayCommand SaveEditCommand { get; }
     public AsyncRelayCommand DuplicateCommand { get; }
     public AsyncRelayCommand DeleteCommand { get; }
+    public AsyncRelayCommand CreateProfileCommand { get; }
+    public SyncRelayCommand BrowseExeCommand { get; }
 
     public ProfileManagerViewModel(IApplicationProfileService profileService, ILogger<ProfileManagerViewModel> logger)
     {
@@ -78,6 +96,8 @@ public class ProfileManagerViewModel : ViewModelBase
         SaveEditCommand = new AsyncRelayCommand(OnSaveEditAsync, () => SelectedProfile != null);
         DuplicateCommand = new AsyncRelayCommand(OnDuplicateAsync, () => SelectedProfile != null);
         DeleteCommand = new AsyncRelayCommand(OnDeleteAsync, () => SelectedProfile != null);
+        CreateProfileCommand = new AsyncRelayCommand(OnCreateProfileAsync, () => !string.IsNullOrWhiteSpace(NewProfileName));
+        BrowseExeCommand = new SyncRelayCommand(OnBrowseExe);
     }
 
     public async Task LoadProfilesAsync()
@@ -99,6 +119,54 @@ public class ProfileManagerViewModel : ViewModelBase
         }
 
         IsLoading = false;
+    }
+
+    private async Task OnCreateProfileAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewProfileName) || string.IsNullOrWhiteSpace(NewProfileExePath))
+        {
+            StatusMessage = "Name and executable path are required";
+            return;
+        }
+
+        var profile = new ApplicationProfile(
+            Guid.NewGuid(),
+            NewProfileName.Trim(),
+            null,
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            new ApplicationLaunchChain([
+                new LaunchStep(1, NewProfileName.Trim(), NewProfileExePath.Trim(), null, null,
+                    new ReadinessCondition(ConditionType.ProcessStarted, null, null,
+                        null, null, null, null, null, null, null),
+                    null, true)
+            ]));
+
+        var result = await _profileService.SaveProfileAsync(profile);
+        if (result.IsSuccess)
+        {
+            Profiles.Add(new ProfileItemViewModel(profile));
+            SelectedProfile = Profiles.Last();
+            NewProfileName = string.Empty;
+            NewProfileExePath = string.Empty;
+            StatusMessage = $"Profile '{profile.Name}' created";
+        }
+        else
+        {
+            StatusMessage = $"Create failed: {result.ErrorMessage}";
+        }
+    }
+
+    private void OnBrowseExe()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Select Application Executable",
+            Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*",
+            CheckFileExists = true
+        };
+        if (dialog.ShowDialog() == true)
+            NewProfileExePath = dialog.FileName;
     }
 
     private async Task OnSaveEditAsync()
@@ -184,6 +252,7 @@ public class ProfileItemViewModel : ViewModelBase
     public int StepCount => Source.LaunchChain.Steps.Count;
     public string Applications => string.Join(", ", Source.LaunchChain.Steps.Select(s => s.ApplicationTag));
     public string CreatedAtDisplay => Source.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+    public string ExePath => Source.LaunchChain.Steps.Count > 0 ? Source.LaunchChain.Steps[0].ExecutablePath : "(none)";
 
     public ProfileItemViewModel(ApplicationProfile profile)
     {

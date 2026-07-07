@@ -149,24 +149,3 @@ public class SettingsViewModel : ViewModelBase
             DefaultExportDir = dialog.FolderName;
     }
 }
-
-public class SyncRelayCommand : System.Windows.Input.ICommand
-{
-    private readonly Action _execute;
-    private readonly Func<bool>? _canExecute;
-
-    public SyncRelayCommand(Action execute, Func<bool>? canExecute = null)
-    {
-        _execute = execute;
-        _canExecute = canExecute;
-    }
-
-    public event EventHandler? CanExecuteChanged
-    {
-        add => System.Windows.Input.CommandManager.RequerySuggested += value;
-        remove => System.Windows.Input.CommandManager.RequerySuggested -= value;
-    }
-
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
-    public void Execute(object? parameter) => _execute();
-}
