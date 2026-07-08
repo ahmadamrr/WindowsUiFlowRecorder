@@ -75,7 +75,7 @@ public class EndToEndFlowTests
 
         var windowId = Guid.NewGuid();
         var testElement = new ElementInfo(
-            "btn1", "button1", "OK", "Button", null, null, null,
+            "btn1", "button1", "OK", "Button", null, null, null, null,
             true, false, true, new BoundingRectangle(100, 100, 80, 30),
             ["Invoke"], null, 2, 0, []);
 

@@ -1,6 +1,7 @@
 namespace WindowsUiFlowRecorder.Application.Recording;
 
 using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using WindowsUiFlowRecorder.Application.Abstractions;
 using WindowsUiFlowRecorder.Application.Launching;
@@ -277,6 +278,14 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
     private void OnRawInputEvent(RawInputEvent evt)
     {
         if (CurrentState != RecordingSessionState.Recording) return;
+
+        if (evt.WindowHandle.HasValue && evt.WindowHandle.Value != IntPtr.Zero)
+        {
+            GetWindowThreadProcessId(evt.WindowHandle.Value, out var pid);
+            if (pid == _recorderProcessId)
+                return;
+        }
+
         _inputQueue.Enqueue(evt);
     }
 
@@ -411,6 +420,7 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
         var windowBatch = new HashSet<Guid>();
         var lastCoalesceReset = DateTime.UtcNow;
         var settings = (await _settingsService.GetSettingsAsync()).Value;
+        var settingsRefreshCount = 0;
 
         while (!ct.IsCancellationRequested)
         {
@@ -420,6 +430,13 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                 {
                     await Task.Delay(50, ct);
                     continue;
+                }
+
+                if (++settingsRefreshCount % 50 == 0)
+                {
+                    var freshSettings = await _settingsService.GetSettingsAsync();
+                    if (freshSettings.IsSuccess)
+                        settings = freshSettings.Value;
                 }
 
                 if (_inputQueue.TryDequeue(out var evt))
@@ -591,7 +608,7 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
             var seq = Interlocked.Increment(ref _sequenceNumber);
             var action = ActionCoalescingPolicy.Coalesce(
                 events.AsReadOnly(),
-                targetElement ?? new ElementInfo("unknown", null, null, "Unknown", null, null, null,
+                targetElement ?? new ElementInfo("unknown", null, null, "Unknown", null, null, null, null,
                     false, false, false, new BoundingRectangle(0, 0, 0, 0), [], null, 0, 0, []),
                 windowId,
                 applicationTag,
@@ -602,7 +619,19 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                 (screenshotMode == ScreenshotMode.WindowChangeOnly && action.ActionType == ActionType.WindowActivated))
             {
                 var workingFolder = GetSessionScreenshotsFolder();
-                var screenshotResult = await _screenshotCapturer.CaptureFullScreenAsync(workingFolder, ct);
+
+                Result<ScreenshotReference> screenshotResult;
+
+                if (windowId != Guid.Empty && _session.Windows.TryGetValue(windowId, out var winSnap))
+                {
+                    screenshotResult = await _screenshotCapturer.CaptureWindowAsync(
+                        winSnap.NativeWindowHandle, workingFolder, ct);
+                }
+                else
+                {
+                    screenshotResult = await _screenshotCapturer.CaptureFullScreenAsync(workingFolder, ct);
+                }
+
                 if (screenshotResult.IsSuccess)
                 {
                     var screenshotRef = screenshotResult.Value with { AssociatedActionId = action.ActionId };
@@ -611,6 +640,11 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                     {
                         _session!.Screenshots.Add(screenshotRef);
                     }
+                }
+                else
+                {
+                    _logger.LogWarning("Screenshot capture failed for action {Seq}: {Reason}",
+                        action.SequenceNumber, screenshotResult.ErrorMessage);
                 }
             }
 
@@ -754,4 +788,7 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
         _captureCts?.Dispose();
         (_inputHook as IDisposable)?.Dispose();
     }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern int GetWindowThreadProcessId(IntPtr hWnd, out int lpdwProcessId);
 }

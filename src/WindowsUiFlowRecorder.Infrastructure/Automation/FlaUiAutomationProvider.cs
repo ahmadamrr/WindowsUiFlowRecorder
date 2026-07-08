@@ -221,6 +221,7 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
                 element.ControlType.ToString() ?? "Unknown",
                 null,
                 element.ClassName,
+                element.Properties.FrameworkId.ValueOrDefault ?? "",
                 element.HelpText,
                 element.IsEnabled,
                 element.IsOffscreen,
@@ -241,7 +242,7 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
 
     private static ElementInfo CreateTruncatedElement(int depth) => new(
         Guid.NewGuid().ToString(), null, null, "Unknown",
-        null, null, null, false, false, false,
+        null, null, null, null, false, false, false,
         new BoundingRectangle(0, 0, 0, 0), [], null, depth, 0, []);
 
     public Task<Result> SubscribeToEventsAsync(

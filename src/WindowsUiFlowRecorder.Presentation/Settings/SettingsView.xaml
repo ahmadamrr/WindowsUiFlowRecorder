@@ -43,7 +43,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Screenshot Mode:" Foreground="#CCC" VerticalAlignment="Center"/>
                         <ComboBox Grid.Column="1" ItemsSource="{Binding ScreenshotModes}"
-                                  SelectedItem="{Binding ScreenshotMode}" Background="#333" Foreground="#CCC" Padding="4"/>
+                                  SelectedItem="{Binding ScreenshotMode}" Background="#333" Foreground="#CCC" Padding="4" IsReadOnly="True"/>
                     </Grid>
 
                     <Grid Grid.Row="1" Margin="0,0,0,12">
@@ -62,7 +62,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Hierarchy Re-capture Sensitivity:" Foreground="#CCC" VerticalAlignment="Center"/>
                         <ComboBox Grid.Column="1" ItemsSource="{Binding HierarchySensitivities}"
-                                  SelectedItem="{Binding HierarchySensitivity}" Background="#333" Foreground="#CCC" Padding="4"/>
+                                  SelectedItem="{Binding HierarchySensitivity}" Background="#333" Foreground="#CCC" Padding="4" IsReadOnly="True"/>
                     </Grid>
 
                     <Grid Grid.Row="3" Margin="0,0,0,12">

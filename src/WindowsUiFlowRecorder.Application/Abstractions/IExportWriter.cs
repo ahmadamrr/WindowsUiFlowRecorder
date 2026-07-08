@@ -10,5 +10,7 @@ public interface IExportWriter
         ExportPackage exportPackage,
         string outputDirectory,
         IReadOnlyList<ScreenshotReference> screenshots,
-        CancellationToken ct);
+        CancellationToken ct,
+        string? exportFileName = null,
+        string? screenshotsSubfolder = null);
 }

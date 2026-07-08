@@ -9,6 +9,7 @@ public record ElementInformation(
     string ControlType,
     string? LocalizedControlType,
     string? ClassName,
+    string? FrameworkId,
     string? HelpText,
     bool IsEnabled,
     bool IsOffscreen,

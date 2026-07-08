@@ -26,13 +26,34 @@ public class ExportWriter : IExportWriter
         ExportPackage exportPackage,
         string outputDirectory,
         IReadOnlyList<ScreenshotReference> screenshots,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? exportFileName = null,
+        string? screenshotsSubfolder = null)
     {
         try
         {
             Directory.CreateDirectory(outputDirectory);
 
-            var screenshotsDir = Path.Combine(outputDirectory, "screenshots");
+            if (string.IsNullOrEmpty(exportFileName))
+            {
+                var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+                if (exportPackage.ExportKind == ExportKind.RecordingSession
+                    && exportPackage.RecordingSession != null)
+                {
+                    var sessionName = SanitizeFileName(exportPackage.RecordingSession.Name);
+                    exportFileName = $"recording_{sessionName}_{timestamp}.json";
+                }
+                else
+                {
+                    exportFileName = $"scan_{timestamp}.json";
+                }
+            }
+
+            if (string.IsNullOrEmpty(screenshotsSubfolder))
+                screenshotsSubfolder = exportPackage.ExportKind == ExportKind.RecordingSession
+                    ? "recording_screenshots" : "scan_screenshots";
+
+            var screenshotsDir = Path.Combine(outputDirectory, screenshotsSubfolder);
             Directory.CreateDirectory(screenshotsDir);
 
             foreach (var screenshot in screenshots)
@@ -44,7 +65,7 @@ public class ExportWriter : IExportWriter
                 }
             }
 
-            var exportPath = Path.Combine(outputDirectory, "export.json");
+            var exportPath = Path.Combine(outputDirectory, exportFileName);
             var json = JsonSerializer.Serialize(exportPackage, JsonOptions);
             await File.WriteAllTextAsync(exportPath, json, ct);
 
@@ -56,5 +77,12 @@ public class ExportWriter : IExportWriter
             _logger.LogError(ex, "Failed to write export to {Dir}", outputDirectory);
             return Result.Failure(FailureReason.DiskWriteFailed, ex.Message);
         }
+    }
+
+    private static string SanitizeFileName(string name)
+    {
+        foreach (var c in Path.GetInvalidFileNameChars())
+            name = name.Replace(c, '_');
+        return name.Length > 50 ? name[..50] : name;
     }
 }

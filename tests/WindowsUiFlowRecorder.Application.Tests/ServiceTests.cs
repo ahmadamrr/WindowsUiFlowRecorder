@@ -169,7 +169,7 @@ public class UiScanServiceTests
         Guid.NewGuid(), "TestApp", 1234, IntPtr.Zero, "Test Window", "WindowClass",
         new BoundingRectangle(0, 0, 800, 600),
         DateTime.UtcNow, DateTime.UtcNow, 1,
-        new ElementInfo("root", null, null, "Window", null, null, null,
+        new ElementInfo("root", null, null, "Window", null, null, null, null,
             true, false, false, new BoundingRectangle(0, 0, 800, 600), [], null, 0, 0, []),
         new StructuralFingerprint("test"));
 }
@@ -190,7 +190,8 @@ public class ExportServiceTests
     {
         _writerMock.Setup(w => w.WriteExportAsync(
                 It.IsAny<ExportPackage>(), It.IsAny<string>(),
-                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>()))
+                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>(),
+                It.IsAny<string?>(), It.IsAny<string?>()))
             .ReturnsAsync(Result.Success());
 
         var session = CreateTestSession();
@@ -200,7 +201,8 @@ public class ExportServiceTests
         result.IsSuccess.Should().BeTrue();
         _writerMock.Verify(w => w.WriteExportAsync(
             It.IsAny<ExportPackage>(), It.IsAny<string>(),
-            It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>(),
+            It.IsAny<string?>(), It.IsAny<string?>()), Times.Once);
     }
 
     [Fact]
@@ -208,7 +210,8 @@ public class ExportServiceTests
     {
         _writerMock.Setup(w => w.WriteExportAsync(
                 It.IsAny<ExportPackage>(), It.IsAny<string>(),
-                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>()))
+                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>(),
+                It.IsAny<string?>(), It.IsAny<string?>()))
             .ReturnsAsync(Result.Success());
 
         var session = CreateTestSession();
@@ -224,7 +227,7 @@ public class ExportServiceTests
         _writerMock.Verify(w => w.WriteExportAsync(
             It.IsAny<ExportPackage>(), It.IsAny<string>(),
             It.Is<IReadOnlyList<ScreenshotReference>>(list => list.Count == 1),
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<CancellationToken>(), It.IsAny<string?>(), It.IsAny<string?>()), Times.Once);
     }
 
     [Fact]
@@ -246,7 +249,8 @@ public class ExportServiceTests
     {
         _writerMock.Setup(w => w.WriteExportAsync(
                 It.IsAny<ExportPackage>(), It.IsAny<string>(),
-                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>()))
+                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>(),
+                It.IsAny<string?>(), It.IsAny<string?>()))
             .ReturnsAsync(Result.Success());
 
         var snapshot = CreateTestSnapshot();
@@ -255,7 +259,8 @@ public class ExportServiceTests
         result.IsSuccess.Should().BeTrue();
         _writerMock.Verify(w => w.WriteExportAsync(
             It.IsAny<ExportPackage>(), It.IsAny<string>(),
-            It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>(),
+            It.IsAny<string?>(), It.IsAny<string?>()), Times.Once);
     }
 
     [Fact]
@@ -263,7 +268,8 @@ public class ExportServiceTests
     {
         _writerMock.Setup(w => w.WriteExportAsync(
                 It.IsAny<ExportPackage>(), It.IsAny<string>(),
-                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>()))
+                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>(),
+                It.IsAny<string?>(), It.IsAny<string?>()))
             .ReturnsAsync(Result.Success());
 
         var snapshot = CreateTestSnapshot();
@@ -292,7 +298,7 @@ public class ExportServiceTests
         session.Actions.Add(new RecordedAction(
             Guid.NewGuid(), 1, DateTime.UtcNow.AddMinutes(-4),
             ActionType.Click, "TestApp", Guid.NewGuid(),
-            new ElementInfo("btn1", "button1", "OK", "Button", null, null, null,
+            new ElementInfo("btn1", "button1", "OK", "Button", null, null, null, null,
                 true, false, false, new BoundingRectangle(100, 100, 50, 20),
                 ["Invoke"], null, 1, 0, []),
             [], new ScreenPoint(120, 110), null, null, null, null, null));
@@ -304,7 +310,7 @@ public class ExportServiceTests
         Guid.NewGuid(), "TestApp", 1234, IntPtr.Zero, "Test Window", "WindowClass",
         new BoundingRectangle(0, 0, 800, 600),
         DateTime.UtcNow, DateTime.UtcNow, 1,
-        new ElementInfo("root", null, null, "Window", null, null, null,
+        new ElementInfo("root", null, null, "Window", null, null, null, null,
             true, false, false, new BoundingRectangle(0, 0, 800, 600), [], null, 0, 0, []),
         new StructuralFingerprint("test"));
 }

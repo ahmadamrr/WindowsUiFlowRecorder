@@ -30,7 +30,11 @@ public class ExportService : IExportService
             return validation;
 
         var screenshots = CollectScreenshots(session);
-        return await _writer.WriteExportAsync(package, outputDirectory, screenshots, ct);
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        var sessionName = SanitizeFileName(session.Name);
+        var exportFile = $"recording_{sessionName}_{timestamp}.json";
+        return await _writer.WriteExportAsync(package, outputDirectory, screenshots, ct,
+            exportFile, "recording_screenshots");
     }
 
     public async Task<Result> ExportStandaloneScanAsync(
@@ -50,7 +54,18 @@ public class ExportService : IExportService
         if (!validation.IsSuccess)
             return validation;
 
-        return await _writer.WriteExportAsync(package, outputDirectory, [], ct);
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        var exportFile = $"scan_{timestamp}.json";
+        return await _writer.WriteExportAsync(package, outputDirectory, [], ct,
+            exportFile, "scan_screenshots");
+    }
+
+    private static string SanitizeFileName(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return "unnamed";
+        foreach (var c in Path.GetInvalidFileNameChars())
+            name = name.Replace(c, '_');
+        return name.Length > 50 ? name[..50] : name;
     }
 
     private static Result ValidateSchema(ExportPackage package)
@@ -125,6 +140,7 @@ public class ExportService : IExportService
             .ToList();
 
         var actions = session.Actions
+            .Where(a => a.TargetElement?.ProcessId != _recorderProcessId)
             .Select(a => new RecordedActionExport(
                 a.ActionId, a.SequenceNumber, a.TimestampUtc,
                 a.ActionType.ToString(), a.ApplicationTag, a.WindowId,
@@ -142,9 +158,11 @@ public class ExportService : IExportService
         MarkInteractedElements(windows, session.Actions);
         windows = PruneHierarchy(windows, scope);
 
+        var screenshotsSubfolder = "recording_screenshots";
+
         var screenshotInfos = session.Screenshots
             .Select(s => new ScreenshotInformation(
-                s.ScreenshotId, $"screenshots/{s.RelativeFilePath}", s.Scope.ToString(),
+                s.ScreenshotId, $"{screenshotsSubfolder}/{s.RelativeFilePath}", s.Scope.ToString(),
                 s.Format.ToString(), s.Width, s.Height, s.CapturedAtUtc,
                 s.AssociatedActionId, s.AssociatedWindowId))
             .ToList();
@@ -185,9 +203,9 @@ public class ExportService : IExportService
         ws.BoundingRectangle, ws.FirstCapturedAtUtc, ws.LastUpdatedAtUtc,
         ws.CaptureCount, MapElement(ws.RootElement));
 
-    private static ElementInformation MapElement(ElementInfo e) => new(
-        e.ElementId, e.AutomationId, e.Name, e.ControlType, e.LocalizedControlType,
-        e.ClassName, e.HelpText, e.IsEnabled, e.IsOffscreen, e.IsKeyboardFocusable,
+private static ElementInformation MapElement(ElementInfo e) => new(
+    e.ElementId, e.AutomationId, e.Name, e.ControlType, e.LocalizedControlType,
+    e.ClassName, e.FrameworkId, e.HelpText, e.IsEnabled, e.IsOffscreen, e.IsKeyboardFocusable,
         e.BoundingRectangle, e.SupportedPatterns, e.ValueOrText, e.DepthInTree,
         e.ProcessId, false, 0, [],
         e.Children.Select(MapElement).ToList());
