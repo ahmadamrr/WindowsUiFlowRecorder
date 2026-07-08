@@ -31,7 +31,7 @@ public class EndToEndFlowTests
         settingsMock.Setup(s => s.GetSettingsAsync())
             .ReturnsAsync(Result<Settings>.Success(new Settings(
                 ScreenshotMode.EveryAction, false, HierarchyRecaptureSensitivity.Medium,
-                null, 30, 250, 5000, false, DateTime.UtcNow)));
+                null, 30, 250, 5000, HierarchyExportScope.FullTree, false, DateTime.UtcNow)));
 
         var service = new RecordingSessionService(
             launchMock.Object, inputMock.Object, uiaMock.Object,
@@ -83,7 +83,7 @@ public class EndToEndFlowTests
             .ReturnsAsync(Result<ElementInfo>.Success(testElement));
 
         var testWindow = new WindowSnapshot(
-            windowId, "Calculator", 1001, "Calculator Window", "WindowClass",
+            windowId, "Calculator", 1001, IntPtr.Zero, "Calculator Window", "WindowClass",
             new BoundingRectangle(0, 0, 800, 600),
             DateTime.UtcNow, DateTime.UtcNow, 1, testElement,
             HierarchyRecapturePolicy.ComputeFingerprint(testElement));

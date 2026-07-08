@@ -10,6 +10,7 @@ public record Settings(
     int DefaultReadinessConditionTimeoutSeconds,
     int DefaultReadinessPollIntervalMilliseconds,
     int MaxHierarchyElementCount,
+    HierarchyExportScope HierarchyExportScope,
     bool VerboseDiagnosticLoggingEnabled,
     DateTime LastModifiedAtUtc
 );

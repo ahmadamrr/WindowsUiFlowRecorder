@@ -6,6 +6,7 @@ public record WindowSnapshot(
     Guid WindowId,
     string ApplicationTag,
     int ProcessId,
+    IntPtr NativeWindowHandle,
     string Title,
     string ClassName,
     BoundingRectangle BoundingRectangle,

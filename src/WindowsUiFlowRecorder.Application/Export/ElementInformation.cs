@@ -18,5 +18,8 @@ public record ElementInformation(
     string? ValueOrText,
     int DepthInTree,
     int ProcessId,
+    bool WasInteractedWith,
+    int InteractionCount,
+    IReadOnlyList<Guid> InteractedActionIds,
     IReadOnlyList<ElementInformation> Children
 );

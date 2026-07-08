@@ -30,13 +30,58 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
                 return Task.FromResult(Result<ElementInfo>.Failure(
                     FailureReason.ElementNotFound, "No element at point"));
 
-            var info = BuildElementInfo(element, 0);
+            var resolved = ResolveDeepestElementAtPoint(element, point);
+            var info = BuildElementInfo(resolved, 0);
             return Task.FromResult(Result<ElementInfo>.Success(info));
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to get element at point ({X},{Y})", point.X, point.Y);
             return Task.FromResult(Result<ElementInfo>.Failure(FailureReason.ElementStale, ex.Message));
+        }
+    }
+
+    private AutomationElement ResolveDeepestElementAtPoint(AutomationElement element, ScreenPoint point)
+    {
+        try
+        {
+            var children = element.FindAllChildren();
+            if (children == null || children.Length == 0)
+                return element;
+
+            AutomationElement? bestChild = null;
+            var bestArea = int.MaxValue;
+
+            for (int i = 0; i < Math.Min(children.Length, 200); i++)
+            {
+                try
+                {
+                    var child = children[i];
+                    var rect = child.BoundingRectangle;
+                    if (rect.IsEmpty) continue;
+
+                    var pt = new System.Drawing.Point(point.X, point.Y);
+                    if (!rect.Contains(pt)) continue;
+
+                    var area = (int)(rect.Width * rect.Height);
+
+                    if (area < bestArea && area > 0)
+                    {
+                        bestArea = area;
+                        bestChild = child;
+                    }
+                }
+                catch { }
+            }
+
+            if (bestChild != null && bestChild != element)
+                return ResolveDeepestElementAtPoint(bestChild, point);
+
+            return element;
+        }
+        catch
+        {
+            return element;
         }
     }
 
@@ -77,7 +122,7 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
                 return Task.FromResult(Result<WindowSnapshot>.Failure(
                     FailureReason.WindowNotFound, "No window found for element's process"));
 
-            return WalkHierarchyAsync(windowHandle, maxElementCount, ct);
+            return WalkHierarchyWithPidAsync(windowHandle, pid.ValueOrDefault, maxElementCount, ct);
         }
         catch (Exception ex)
         {
@@ -90,6 +135,12 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
     public Task<Result<WindowSnapshot>> WalkHierarchyAsync(
         IntPtr windowHandle, int maxElementCount, CancellationToken ct)
     {
+        return WalkHierarchyWithPidAsync(windowHandle, 0, maxElementCount, ct);
+    }
+
+    public Task<Result<WindowSnapshot>> WalkHierarchyWithPidAsync(
+        IntPtr windowHandle, int processId, int maxElementCount, CancellationToken ct)
+    {
         try
         {
             var element = _automation.FromHandle(windowHandle);
@@ -99,9 +150,10 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
 
             var rootInfo = WalkElement(element, 0, ct, maxElementCount);
             var now = DateTime.UtcNow;
+            var pid = processId > 0 ? processId : element.Properties.ProcessId.ValueOrDefault;
 
             var snapshot = new WindowSnapshot(
-                Guid.NewGuid(), "", 0, element.Name,
+                Guid.NewGuid(), "", pid, windowHandle, element.Name,
                 element.ClassName ?? "",
                 new BoundingRectangle(
                     (int)element.BoundingRectangle.X,

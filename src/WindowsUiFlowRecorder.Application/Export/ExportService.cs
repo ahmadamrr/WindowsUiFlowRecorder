@@ -10,7 +10,7 @@ public class ExportService : IExportService
     private readonly IExportWriter _writer;
     private readonly ILogger<ExportService> _logger;
 
-    private const string CurrentSchemaVersion = "1.0.0";
+    private const string CurrentSchemaVersion = "1.1.0";
     private readonly int _recorderProcessId;
 
     public ExportService(IExportWriter writer, ILogger<ExportService> logger)
@@ -138,6 +138,10 @@ public class ExportService : IExportService
             .Select(MapWindow)
             .ToList();
 
+        var scope = DetermineHierarchyExportScope(session);
+        MarkInteractedElements(windows, session.Actions);
+        windows = PruneHierarchy(windows, scope);
+
         var screenshotInfos = session.Screenshots
             .Select(s => new ScreenshotInformation(
                 s.ScreenshotId, $"screenshots/{s.RelativeFilePath}", s.Scope.ToString(),
@@ -185,8 +189,118 @@ public class ExportService : IExportService
         e.ElementId, e.AutomationId, e.Name, e.ControlType, e.LocalizedControlType,
         e.ClassName, e.HelpText, e.IsEnabled, e.IsOffscreen, e.IsKeyboardFocusable,
         e.BoundingRectangle, e.SupportedPatterns, e.ValueOrText, e.DepthInTree,
-        e.ProcessId,
+        e.ProcessId, false, 0, [],
         e.Children.Select(MapElement).ToList());
+
+    private static HierarchyExportScope DetermineHierarchyExportScope(RecordingSession session)
+    {
+        return HierarchyExportScope.FullTree;
+    }
+
+    private static void MarkInteractedElements(
+        List<WindowInformation> windows, List<RecordedAction> actions)
+    {
+        foreach (var win in windows)
+        {
+            var updatedRoot = MarkNodes(win.RootElement, actions, win.WindowId);
+            var idx = windows.IndexOf(win);
+            windows[idx] = win with { RootElement = updatedRoot };
+        }
+    }
+
+    private static ElementInformation MarkNodes(
+        ElementInformation node, List<RecordedAction> actions, Guid windowId)
+    {
+        var matchingActionIds = new List<Guid>();
+
+        foreach (var action in actions)
+        {
+            if (action.WindowId != windowId) continue;
+            if (action.TargetElement == null) continue;
+
+            if (MatchesAction(node, action.TargetElement))
+                matchingActionIds.Add(action.ActionId);
+        }
+
+        matchingActionIds.Sort((a, b) =>
+        {
+            var seqA = actions.FirstOrDefault(ra => ra.ActionId == a)?.SequenceNumber ?? 0;
+            var seqB = actions.FirstOrDefault(ra => ra.ActionId == b)?.SequenceNumber ?? 0;
+            return seqA.CompareTo(seqB);
+        });
+
+        var updatedChildren = node.Children
+            .Select(c => MarkNodes(c, actions, windowId))
+            .ToList();
+
+        return node with
+        {
+            WasInteractedWith = matchingActionIds.Count > 0,
+            InteractionCount = matchingActionIds.Count,
+            InteractedActionIds = matchingActionIds.AsReadOnly(),
+            Children = updatedChildren.AsReadOnly()
+        };
+    }
+
+    private static bool MatchesAction(ElementInformation node, ElementInfo target)
+    {
+        if (!string.IsNullOrEmpty(target.AutomationId) &&
+            string.Equals(node.AutomationId, target.AutomationId, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (string.Equals(node.ControlType, target.ControlType, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(node.Name ?? "", target.Name ?? "", StringComparison.Ordinal) &&
+            BoundsWithinTolerance(node.BoundingRectangle, target.BoundingRectangle, 2))
+            return true;
+
+        return false;
+    }
+
+    private static bool BoundsWithinTolerance(
+        BoundingRectangle a, BoundingRectangle b, int tolerance)
+    {
+        return Math.Abs(a.X - b.X) <= tolerance &&
+               Math.Abs(a.Y - b.Y) <= tolerance &&
+               Math.Abs(a.Width - b.Width) <= tolerance &&
+               Math.Abs(a.Height - b.Height) <= tolerance;
+    }
+
+    private static List<WindowInformation> PruneHierarchy(
+        List<WindowInformation> windows, HierarchyExportScope scope)
+    {
+        if (scope == HierarchyExportScope.FullTree)
+            return windows;
+
+        return windows
+            .Select(w => w with { RootElement = PruneNode(w.RootElement, scope) })
+            .ToList();
+    }
+
+    private static ElementInformation PruneNode(ElementInformation node, HierarchyExportScope scope)
+    {
+        if (scope == HierarchyExportScope.FullTree)
+            return node;
+
+        if (scope == HierarchyExportScope.InteractedElementsOnly)
+        {
+            if (node.WasInteractedWith)
+                return node with { Children = new List<ElementInformation>().AsReadOnly() };
+
+            return null!;
+        }
+
+        var prunedChildren = node.Children
+            .Select(c => PruneNode(c, scope))
+            .Where(c => c != null)
+            .ToList();
+
+        var hasInteractedDescendant = prunedChildren.Count > 0 || node.WasInteractedWith;
+
+        if (hasInteractedDescendant)
+            return node with { Children = prunedChildren.AsReadOnly() };
+
+        return null!;
+    }
 }
 
 internal static class SemanticVersion

@@ -201,14 +201,15 @@
 - A window belonging to an active `TargetApplicationContext` becomes active (first time, or after a structural change).
 
 **Main Flow:**
-1. System detects the window activation via a subscribed UIA event.
-2. If this window has no existing `WindowSnapshot` in the session, System performs a full depth-first hierarchy walk (`SystemDesign.md` §9) up to the configured `MaxHierarchyElementCount`.
-3. If a `WindowSnapshot` already exists, System computes the window's structural fingerprint and compares it to the stored one.
-4. If the fingerprint differs and the minimum re-capture interval has elapsed, System re-walks the hierarchy and replaces the stored `WindowSnapshot` in place.
-5. System stores/updates the `WindowSnapshot` keyed by `WindowId` in the session's `Windows` collection.
+1. System detects the window activation via a subscribed UIA event and looks up the window's native OS handle against the session's already-tracked window handles (`SystemDesign.md` §9).
+2. If this handle has never been seen before in this session, System mints a new `WindowId` for it and performs a full depth-first hierarchy walk (`SystemDesign.md` §9) up to the configured `MaxHierarchyElementCount`.
+3. If this handle already has a `WindowSnapshot` (i.e., this is a re-activation of the same physical window — including the tester switching back to a window they already visited, per `UC-09`), System reuses the existing `WindowId` and computes the window's structural fingerprint to compare against the stored one, rather than creating a new entry.
+4. If the fingerprint differs and the minimum re-capture interval has elapsed, System re-walks the hierarchy and replaces the stored `WindowSnapshot` in place, under the same `WindowId`.
+5. System stores/updates the `WindowSnapshot` keyed by `WindowId` in the session's `Windows` collection — one entry per distinct physical window for the entire session, regardless of how many times it was activated.
 
 **Alternate/Exception Flows:**
 - 2a. The hierarchy exceeds `MaxHierarchyElementCount` → System truncates the walk at the safety limit and logs a warning; the resulting `WindowInformation` is still exported, but is understood to be a partial tree.
+- 3a. The tester re-activates a window they already visited earlier in the session and nothing about it has structurally changed → System recognizes the existing handle, confirms the fingerprint is unchanged, and makes no update at all — no new entry, no unnecessary re-walk.
 - 4a. Fingerprint differs but the minimum re-capture interval has not elapsed → System defers the re-capture until the next qualifying trigger (`SystemDesign.md` §9).
 
 **Postconditions:**
@@ -338,21 +339,22 @@
 ## UC-13 — Export a Recording Session
 
 **Primary Actor:** Minh or Dara
-**Related FRs:** FR-7.1–FR-7.3
+**Related FRs:** FR-7.1–FR-7.3, FR-4.5
 
 **Preconditions:**
 - Session is in `Reviewing` state (`UC-12` complete).
 
 **Main Flow:**
-1. Tester clicks "Export" and chooses an output directory (pre-filled from `Settings.DefaultExportDirectory`, if set).
+1. Tester clicks "Export" and chooses an output directory (pre-filled from `Settings.DefaultExportDirectory`, if set), optionally overriding `Settings.HierarchyExportScope` for this export only.
 2. System transitions to `Exporting`, maps the internal `RecordingSession` aggregate into an `ExportPackage`/`RecordingSessionExport` (`DataModel.md` §4).
-3. System validates the resulting document against the declared `SchemaVersion` before writing anything to disk.
-4. System writes `export.json` and copies/relocates all referenced screenshots into the chosen folder, rewriting paths as relative (FR-7.3).
-5. System transitions to `Exported` and confirms success with the output path.
+3. System marks every captured element that was the target of a recorded action (`WasInteractedWith`, `InteractionCount`, `InteractedActionIds`) and applies the chosen `HierarchyExportScope` pruning rule to each window's tree (`SystemDesign.md` §17).
+4. System validates the resulting document against the declared `SchemaVersion` before writing anything to disk.
+5. System writes `export.json` and copies/relocates all referenced screenshots into the chosen folder, rewriting paths as relative (FR-7.3).
+6. System transitions to `Exported` and confirms success with the output path.
 
 **Alternate/Exception Flows:**
-- 3a. Validation fails (should not occur in a correctly implemented system, but is checked defensively) → System blocks the write and surfaces a clear internal error rather than producing a partially-invalid export.
-- 4a. Disk write fails (e.g., destination full or inaccessible) → System reports a structured failure; the session remains in `Reviewing`/working storage, unmodified, so export can be retried (`UC-14`) without re-recording.
+- 4a. Validation fails (should not occur in a correctly implemented system, but is checked defensively) → System blocks the write and surfaces a clear internal error rather than producing a partially-invalid export.
+- 5a. Disk write fails (e.g., destination full or inaccessible) → System reports a structured failure; the session remains in `Reviewing`/working storage, unmodified, so export can be retried (`UC-14`) without re-recording.
 
 **Postconditions:**
 - A self-contained, portable export folder (`export.json` + `screenshots/`) exists at the chosen location.
@@ -516,7 +518,7 @@
 
 **Main Flow:**
 1. Tester opens Settings.
-2. Tester adjusts one or more values: screenshot mode, element-cropped screenshot toggle, hierarchy re-capture sensitivity, default export directory, default readiness-condition timeout, verbose diagnostic logging toggle.
+2. Tester adjusts one or more values: screenshot mode, element-cropped screenshot toggle, hierarchy re-capture sensitivity, hierarchy export scope (full tree / interacted-with-ancestors / interacted-only), default export directory, default readiness-condition timeout, verbose diagnostic logging toggle.
 3. System persists the change immediately via the settings repository and applies it going forward without requiring a restart, where feasible (FR-9.2).
 
 **Alternate/Exception Flows:**

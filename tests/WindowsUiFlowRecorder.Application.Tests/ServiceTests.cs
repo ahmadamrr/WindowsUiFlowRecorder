@@ -63,7 +63,7 @@ public class RecordingSessionServiceTests
         _settingsMock.Setup(s => s.GetSettingsAsync())
             .ReturnsAsync(Result<Settings>.Success(new Settings(
                 ScreenshotMode.EveryAction, false, HierarchyRecaptureSensitivity.Medium,
-                null, 30, 250, 5000, false, DateTime.UtcNow)));
+                null, 30, 250, 5000, HierarchyExportScope.FullTree, false, DateTime.UtcNow)));
 
         var result = await _service.StartRecordingAsync(CancellationToken.None);
 
@@ -88,7 +88,7 @@ public class RecordingSessionServiceTests
         _settingsMock.Setup(s => s.GetSettingsAsync())
             .ReturnsAsync(Result<Settings>.Success(new Settings(
                 ScreenshotMode.EveryAction, false, HierarchyRecaptureSensitivity.Medium,
-                null, 30, 250, 5000, false, DateTime.UtcNow)));
+                null, 30, 250, 5000, HierarchyExportScope.FullTree, false, DateTime.UtcNow)));
         await _service.StartRecordingAsync(CancellationToken.None);
 
         var result = _service.PauseSession();
@@ -121,7 +121,7 @@ public class RecordingSessionServiceTests
         _settingsMock.Setup(s => s.GetSettingsAsync())
             .ReturnsAsync(Result<Settings>.Success(new Settings(
                 ScreenshotMode.EveryAction, false, HierarchyRecaptureSensitivity.Medium,
-                null, 30, 250, 5000, false, DateTime.UtcNow)));
+                null, 30, 250, 5000, HierarchyExportScope.FullTree, false, DateTime.UtcNow)));
         await _service.StartRecordingAsync(CancellationToken.None);
 
         var result = await _service.StopSessionAsync(CancellationToken.None);
@@ -166,7 +166,7 @@ public class UiScanServiceTests
     }
 
     private static WindowSnapshot CreateTestSnapshot() => new(
-        Guid.NewGuid(), "TestApp", 1234, "Test Window", "WindowClass",
+        Guid.NewGuid(), "TestApp", 1234, IntPtr.Zero, "Test Window", "WindowClass",
         new BoundingRectangle(0, 0, 800, 600),
         DateTime.UtcNow, DateTime.UtcNow, 1,
         new ElementInfo("root", null, null, "Window", null, null, null,
@@ -301,7 +301,7 @@ public class ExportServiceTests
     }
 
     private static WindowSnapshot CreateTestSnapshot() => new(
-        Guid.NewGuid(), "TestApp", 1234, "Test Window", "WindowClass",
+        Guid.NewGuid(), "TestApp", 1234, IntPtr.Zero, "Test Window", "WindowClass",
         new BoundingRectangle(0, 0, 800, 600),
         DateTime.UtcNow, DateTime.UtcNow, 1,
         new ElementInfo("root", null, null, "Window", null, null, null,

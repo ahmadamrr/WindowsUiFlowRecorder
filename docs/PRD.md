@@ -124,15 +124,17 @@ To become the standard offline capture tool that every Windows desktop QA engine
 - FR-2.4: Stopping a session finalizes it into an in-memory/on-disk **Recording Session** object and moves the UI to a summary/review screen prior to export.
 
 ### FR-3 Action Capture
-- FR-3.1: The tool must capture, at minimum, the following action types: primary mouse click, secondary (right) mouse click, double-click, keyboard text entry, individual key press (non-text keys such as Enter/Tab/Escape/function keys), focus change, and window activation/switch.
-- FR-3.2: Each captured action must record: timestamp, action type, the target application/process identifier, the target window identifier, the target element's full UIA metadata snapshot at the time of the action, and the element's position within the current window hierarchy.
-- FR-3.3: Keyboard text entry must be associated with the control that held focus at the time of entry.
+- FR-3.1: The tool must capture, at minimum, the following action types: primary mouse click, secondary (right) mouse click, double-click, keyboard text entry, individual key press (non-text keys such as Enter/Tab/Escape/function keys), focus change, and window activation/switch. A mouse-down/mouse-up pair whose displacement stays within the operating system's own drag-initiation threshold must be classified as a click variant, never as a drag — the vast majority of ordinary clicks must not be misclassified as drags.
+- FR-3.2: Each captured action must record: timestamp, action type, the target application/process identifier, the target window identifier, the target element's full UIA metadata snapshot at the time of the action, and the element's position within the current window hierarchy. Point-based element resolution must resolve to the most specific (deepest) element under the cursor; resolving to the window itself or to an unresolved element is acceptable only when the action genuinely targeted empty window chrome, not as a routine fallback.
+- FR-3.3: Keyboard text entry must be associated with the control that held focus at the time of entry, and the captured text must match the tester's actual keystrokes exactly (one recorded character per physical keystroke, with no duplication).
 - FR-3.4: The tool must debounce/coalesce rapid repeated events where appropriate (e.g., a drag producing many intermediate mouse-move events) so the export contains meaningful discrete actions rather than raw event noise. Exact coalescing rules are defined in SystemDesign.md.
 
 ### FR-4 Window & Hierarchy Capture
 - FR-4.1: The first time any window becomes active during a session, the tool must capture a full control hierarchy snapshot of that window (all descendant elements and their UIA metadata) at least once.
 - FR-4.2: The tool must re-capture a window's hierarchy when its structure is detected to have materially changed (e.g., a dialog is added, a list's item count changes) — subject to a configurable sensitivity/throttle setting to avoid excessive re-capture.
 - FR-4.3: Each captured window must record: window title, class name, process name, process id, application/profile tag (Primary/Dependent identifier from FR-1.2), bounding rectangle, and its full descendant control tree.
+- FR-4.4: The same physical window, no matter how many times it is activated or re-captured during a session, must be represented by exactly one entry in the export — re-captures update that entry in place. The tool must never produce multiple export entries for what is, on screen, a single window instance.
+- FR-4.5: Every captured element must indicate whether it was the target of at least one recorded action during the session (and, if so, how many, and which ones), so a tester or automation engineer reviewing the export can distinguish the elements that were actually used from the rest of the captured hierarchy without manually cross-referencing the action list by hand. The user may additionally configure how much of a window's non-interacted hierarchy is included in the export — the full tree (default), only interacted elements plus the ancestor context needed to locate them, or only the interacted elements themselves.
 
 ### FR-5 Screenshot Capture
 - FR-5.1: The tool must capture a screenshot at each recorded action by default, with a user-configurable mode to instead capture only on window change, or only at explicit user-marked checkpoints, or not at all.
@@ -157,7 +159,7 @@ To become the standard offline capture tool that every Windows desktop QA engine
 - FR-8.3: The user can view, edit, duplicate, and delete saved Application Profiles (including launch chains).
 
 ### FR-9 Settings
-- FR-9.1: The user can configure: screenshot mode (per FR-5.1), hierarchy re-capture sensitivity (per FR-4.2), default export directory, and default readiness-condition timeout (per FR-1.4).
+- FR-9.1: The user can configure: screenshot mode (per FR-5.1), hierarchy re-capture sensitivity (per FR-4.2), default export directory, default readiness-condition timeout (per FR-1.4), and the hierarchy export scope — full tree, interacted-elements-with-ancestor-path, or interacted-elements-only (per FR-4.5).
 - FR-9.2: All settings are stored locally and take effect without requiring an application restart, where feasible.
 
 ---
@@ -225,11 +227,13 @@ The MVP is considered acceptance-ready when all of the following are demonstrabl
 1. A tester can configure a single-application target, start recording, perform at least 10 distinct UI actions across at least 2 different windows, stop recording, and export a valid `ExportPackage` JSON plus screenshots folder.
 2. A tester can configure a two-step Dependent Application Launch Chain (Primary + one Dependent), define a control-based Readiness Condition on the Primary, and have the tool launch the Dependent application automatically only once that condition is met — including a demonstrable "aborts cleanly with a clear error" behavior when the condition is never met.
 3. Every recorded action in an exported session includes complete UIA metadata for its target element and correctly tags which application in the launch chain it belongs to.
-4. Every window activated during the session appears at least once in the export with a full hierarchy snapshot.
+4. Every window activated during the session appears **exactly once** in the export with its (final, in-place-updated) full hierarchy snapshot — a window re-activated or re-captured multiple times during a session must never produce more than one export entry for it.
 5. The Smart UI Scanner can, independently of any recording session, scan a running application on demand, present a searchable hierarchy tree, highlight elements on screen, and export a standalone scan as valid JSON using the shared schema.
 6. No network call occurs at any point during any of the above flows (verified by instrumented/automated test, per TestingStrategy.md).
 7. All exported JSON validates against the schema version declared inside the export itself.
 8. A previously recorded session can be renamed, annotated, deleted, and re-exported without being re-recorded.
+9. In an exported session, every element that was the target of a recorded action is marked as such (with an accurate interaction count and links back to the specific action(s)), and switching `HierarchyExportScope` between its three modes visibly changes the exported hierarchy size accordingly, without altering the `Actions` list itself.
+10. Given a scripted test pass with a known, fixed sequence of clicks and a known typed string, the exported session contains no drag-misclassified clicks, no unresolved (`Unknown`/`None`) target elements, and an `EnteredText` value that is character-for-character identical to what was actually typed.
 
 ---
 

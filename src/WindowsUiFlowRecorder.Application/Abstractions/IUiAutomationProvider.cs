@@ -9,6 +9,7 @@ public interface IUiAutomationProvider
     Task<Result<ElementInfo>> GetFocusedElementAsync(CancellationToken ct);
     Task<Result<WindowSnapshot>> GetWindowAtPointAsync(ScreenPoint point, int maxElementCount, CancellationToken ct);
     Task<Result<WindowSnapshot>> WalkHierarchyAsync(IntPtr windowHandle, int maxElementCount, CancellationToken ct);
+    Task<Result<WindowSnapshot>> WalkHierarchyWithPidAsync(IntPtr windowHandle, int processId, int maxElementCount, CancellationToken ct);
     Task<Result> SubscribeToEventsAsync(
         IReadOnlyList<TargetApplicationContext> contexts,
         Action<ElementInfo> onFocusChanged,

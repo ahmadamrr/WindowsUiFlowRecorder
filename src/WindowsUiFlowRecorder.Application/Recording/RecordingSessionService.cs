@@ -28,6 +28,7 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
     private CancellationTokenSource? _captureCts;
     private readonly object _lock = new();
     private readonly ConcurrentQueue<RawInputEvent> _inputQueue = new();
+    private readonly ConcurrentDictionary<IntPtr, Guid> _windowHandleMap = new();
     private int _sequenceNumber;
 
     private const int HeartbeatThresholdSeconds = 15;
@@ -300,6 +301,8 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
     {
         try
         {
+            if (snapshot.ProcessId == _recorderProcessId) return;
+
             var settings = (await _settingsService.GetSettingsAsync()).Value;
             var minInterval = GetMinimumRecaptureInterval(
                 settings?.HierarchyRecaptureSensitivity ?? HierarchyRecaptureSensitivity.Medium);
@@ -308,36 +311,50 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
             {
                 if (_session == null) return;
 
-                if (!_session.Windows.TryGetValue(snapshot.WindowId, out var existing))
+                var handle = snapshot.NativeWindowHandle;
+
+                if (_windowHandleMap.TryGetValue(handle, out var existingId))
+                {
+                    if (_session.Windows.TryGetValue(existingId, out var existing))
+                    {
+                        var timeSinceLastCapture = DateTime.UtcNow - existing.LastUpdatedAtUtc;
+                        var shouldRecapture = HierarchyRecapturePolicy.ShouldRecapture(
+                            existing.StructuralFingerprint,
+                            snapshot.StructuralFingerprint,
+                            minInterval,
+                            timeSinceLastCapture);
+
+                        if (shouldRecapture)
+                        {
+                            var updated = snapshot with
+                            {
+                                WindowId = existingId,
+                                FirstCapturedAtUtc = existing.FirstCapturedAtUtc,
+                                CaptureCount = existing.CaptureCount + 1
+                            };
+                            _session.Windows[existingId] = updated;
+                            _logger.LogDebug("Window re-captured (structural change): {Title} (capture #{Count})",
+                                snapshot.Title, updated.CaptureCount);
+                        }
+                    }
+                    else
+                    {
+                        _windowHandleMap.TryRemove(handle, out _);
+                        _session.Windows[snapshot.WindowId] = snapshot;
+                        _windowHandleMap[handle] = snapshot.WindowId;
+                    }
+                }
+                else
                 {
                     _session.Windows[snapshot.WindowId] = snapshot;
+                    _windowHandleMap[handle] = snapshot.WindowId;
                     _logger.LogDebug("Window captured: {Title}", snapshot.Title);
-                    return;
-                }
-
-                var timeSinceLastCapture = DateTime.UtcNow - existing.LastUpdatedAtUtc;
-                var shouldRecapture = HierarchyRecapturePolicy.ShouldRecapture(
-                    existing.StructuralFingerprint,
-                    snapshot.StructuralFingerprint,
-                    minInterval,
-                    timeSinceLastCapture);
-
-                if (shouldRecapture)
-                {
-                    var updated = snapshot with
-                    {
-                        FirstCapturedAtUtc = existing.FirstCapturedAtUtc,
-                        CaptureCount = existing.CaptureCount + 1
-                    };
-                    _session.Windows[snapshot.WindowId] = updated;
-                    _logger.LogDebug("Window re-captured (structural change): {Title} (capture #{Count})",
-                        snapshot.Title, updated.CaptureCount);
                 }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to check window re-capture for {WindowId}", snapshot.WindowId);
+            _logger.LogWarning(ex, "Failed to check window re-capture for window");
         }
     }
 
@@ -642,6 +659,7 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
             _logger.LogDebug("Skipping Recorder's own window: {Title}", snapshot.Title);
             return;
         }
+
         var minInterval = GetMinimumRecaptureInterval(
             settings?.HierarchyRecaptureSensitivity ?? HierarchyRecaptureSensitivity.Medium);
 
@@ -649,29 +667,43 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
         {
             if (_session == null) return;
 
-            if (!_session.Windows.TryGetValue(snapshot.WindowId, out var existing))
+            var handle = snapshot.NativeWindowHandle;
+
+            if (_windowHandleMap.TryGetValue(handle, out var existingId))
+            {
+                var resolvedId = existingId;
+
+                if (!_session.Windows.TryGetValue(resolvedId, out var existing))
+                {
+                    _windowHandleMap.TryRemove(handle, out _);
+                    _session.Windows[resolvedId] = snapshot with { WindowId = resolvedId };
+                    return;
+                }
+
+                var timeSinceLastCapture = DateTime.UtcNow - existing.LastUpdatedAtUtc;
+                var shouldRecapture = HierarchyRecapturePolicy.ShouldRecapture(
+                    existing.StructuralFingerprint,
+                    snapshot.StructuralFingerprint,
+                    minInterval,
+                    timeSinceLastCapture);
+
+                if (shouldRecapture)
+                {
+                    var updated = snapshot with
+                    {
+                        WindowId = resolvedId,
+                        FirstCapturedAtUtc = existing.FirstCapturedAtUtc,
+                        CaptureCount = existing.CaptureCount + 1
+                    };
+                    _session.Windows[resolvedId] = updated;
+                    _logger.LogDebug("Window re-captured: {Title} (capture #{Count})",
+                        snapshot.Title, updated.CaptureCount);
+                }
+            }
+            else
             {
                 _session.Windows[snapshot.WindowId] = snapshot;
-                return;
-            }
-
-            var timeSinceLastCapture = DateTime.UtcNow - existing.LastUpdatedAtUtc;
-            var shouldRecapture = HierarchyRecapturePolicy.ShouldRecapture(
-                existing.StructuralFingerprint,
-                snapshot.StructuralFingerprint,
-                minInterval,
-                timeSinceLastCapture);
-
-            if (shouldRecapture)
-            {
-                var updated = snapshot with
-                {
-                    FirstCapturedAtUtc = existing.FirstCapturedAtUtc,
-                    CaptureCount = existing.CaptureCount + 1
-                };
-                _session.Windows[snapshot.WindowId] = updated;
-                _logger.LogDebug("Window re-captured: {Title} (capture #{Count})",
-                    snapshot.Title, updated.CaptureCount);
+                _windowHandleMap[handle] = snapshot.WindowId;
             }
         }
     }

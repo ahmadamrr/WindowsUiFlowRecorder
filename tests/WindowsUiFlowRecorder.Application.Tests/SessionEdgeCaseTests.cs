@@ -232,7 +232,7 @@ public class SessionEdgeCaseTests
         mocks.SettingsMock.Setup(s => s.GetSettingsAsync())
             .ReturnsAsync(Result<Settings>.Success(new Settings(
                 ScreenshotMode.EveryAction, false, HierarchyRecaptureSensitivity.Medium,
-                null, 30, 250, 5000, false, DateTime.UtcNow)));
+                null, 30, 250, 5000, HierarchyExportScope.FullTree, false, DateTime.UtcNow)));
     }
 
     private static LaunchStep CreateLaunchStep() => new(1, "TestApp", "test.exe", null, null,

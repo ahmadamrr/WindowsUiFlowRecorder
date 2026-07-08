@@ -137,17 +137,32 @@ public class GlobalInputHook : IGlobalInputHook, IDisposable
         {
             var vkCode = Marshal.ReadInt32(lParam);
             var isKeyDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
-            var isKeyUp = wParam == WM_KEYUP || wParam == WM_SYSKEYUP;
+            var isChar = wParam == WM_CHAR;
 
-            if (isKeyDown || isKeyUp)
+            if (isChar)
             {
                 var evt = new RawInputEvent(
-                    isKeyDown ? InputEventType.KeyDown : InputEventType.KeyUp,
+                    InputEventType.KeyDown,
                     DateTime.UtcNow, null, vkCode,
-                    IsPrintableKey(vkCode), GetForegroundWindow());
+                    true, GetForegroundWindow());
 
                 LastHeartbeatUtc = DateTime.UtcNow;
                 _callback?.Invoke(evt);
+            }
+            else if (isKeyDown)
+            {
+                var printable = IsPrintableKey(vkCode);
+
+                if (!printable)
+                {
+                    var evt = new RawInputEvent(
+                        InputEventType.KeyDown,
+                        DateTime.UtcNow, null, vkCode,
+                        false, GetForegroundWindow());
+
+                    LastHeartbeatUtc = DateTime.UtcNow;
+                    _callback?.Invoke(evt);
+                }
             }
         }
         return CallNextHookEx(IntPtr.Zero, nCode, wParam, lParam);
@@ -186,12 +201,13 @@ public class GlobalInputHook : IGlobalInputHook, IDisposable
     }
 
     private static bool IsPrintableKey(int vkCode) =>
-        (vkCode >= 0x20 && vkCode <= 0x5A) || vkCode == 0x08;
+        (vkCode >= 0x20 && vkCode <= 0x5A) || (vkCode >= 0x61 && vkCode <= 0x7A);
 
     private const int WH_KEYBOARD_LL = 13;
     private const int WH_MOUSE_LL = 14;
     private const int WM_KEYDOWN = 0x0100;
     private const int WM_KEYUP = 0x0101;
+    private const int WM_CHAR = 0x0102;
     private const int WM_SYSKEYDOWN = 0x0104;
     private const int WM_SYSKEYUP = 0x0105;
     private const int WM_LBUTTONDOWN = 0x0201;

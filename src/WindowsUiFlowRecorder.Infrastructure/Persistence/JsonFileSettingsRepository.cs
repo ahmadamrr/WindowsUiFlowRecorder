@@ -36,7 +36,8 @@ public class JsonFileSettingsRepository : ISettingsRepository
                 var defaults = new Settings(
                     ScreenshotMode.EveryAction, false,
                     HierarchyRecaptureSensitivity.Medium, null,
-                    30, 250, 5000, false, DateTime.UtcNow);
+                    30, 250, 5000, HierarchyExportScope.FullTree,
+                    false, DateTime.UtcNow);
                 return Task.FromResult(Result<Settings>.Success(defaults));
             }
 

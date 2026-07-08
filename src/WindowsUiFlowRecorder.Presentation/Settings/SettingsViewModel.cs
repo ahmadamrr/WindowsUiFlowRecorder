@@ -133,7 +133,7 @@ public class SettingsViewModel : ViewModelBase
             ScreenshotMode, CaptureElementCropped, HierarchySensitivity,
             string.IsNullOrWhiteSpace(DefaultExportDir) ? null : DefaultExportDir,
             ReadinessTimeoutSeconds, ReadinessPollIntervalMs, MaxHierarchyElements,
-            VerboseLogging, DateTime.UtcNow);
+            HierarchyExportScope.FullTree, VerboseLogging, DateTime.UtcNow);
 
         var result = await _settingsService.UpdateSettingsAsync(settings);
         StatusMessage = result.IsSuccess ? "Settings saved" : $"Save failed: {result.ErrorMessage}";

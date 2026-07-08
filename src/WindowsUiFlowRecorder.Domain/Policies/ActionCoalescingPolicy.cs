@@ -1,10 +1,30 @@
 namespace WindowsUiFlowRecorder.Domain.Policies;
 
+using System.Runtime.InteropServices;
 using WindowsUiFlowRecorder.Domain.Common;
 using WindowsUiFlowRecorder.Domain.Entities;
 
 public static class ActionCoalescingPolicy
 {
+    private const int SM_CXDRAG = 68;
+    private const int SM_CYDRAG = 69;
+
+    private static readonly int DragThresholdPixels;
+
+    static ActionCoalescingPolicy()
+    {
+        try
+        {
+            var dx = GetSystemMetrics(SM_CXDRAG);
+            var dy = GetSystemMetrics(SM_CYDRAG);
+            DragThresholdPixels = Math.Max(dx, dy);
+            if (DragThresholdPixels <= 0) DragThresholdPixels = 4;
+        }
+        catch
+        {
+            DragThresholdPixels = 4;
+        }
+    }
     public static RecordedAction Coalesce(
         IReadOnlyList<RawInputEvent> events,
         ElementInfo targetElement,
@@ -70,8 +90,8 @@ public static class ActionCoalescingPolicy
     }
 
     private static bool IsClick(IReadOnlyList<RawInputEvent> events) =>
-        events.Any(e => e.EventType is InputEventType.MouseDown or InputEventType.MouseUp) &&
-        !events.Any(e => e.EventType == InputEventType.MouseMove);
+        events.Any(e => e.EventType == InputEventType.MouseDown) &&
+        events.Any(e => e.EventType == InputEventType.MouseUp);
 
     private static bool IsDragGesture(IReadOnlyList<RawInputEvent> events)
     {
@@ -79,7 +99,21 @@ public static class ActionCoalescingPolicy
         var hasMouseDown = events.Any(e => e.EventType == InputEventType.MouseDown);
         var hasMouseUp = events.Any(e => e.EventType == InputEventType.MouseUp);
         var hasMove = events.Any(e => e.EventType == InputEventType.MouseMove);
-        return hasMouseDown && hasMouseUp && hasMove;
+        if (!hasMouseDown || !hasMouseUp || !hasMove) return false;
+
+        var displacement = GetDragDisplacement(events);
+        return displacement > DragThresholdPixels;
+    }
+
+    private static int GetDragDisplacement(IReadOnlyList<RawInputEvent> events)
+    {
+        var down = events.FirstOrDefault(e => e.EventType == InputEventType.MouseDown);
+        var up = events.LastOrDefault(e => e.EventType == InputEventType.MouseUp);
+        if (down.ScreenPosition == null || up.ScreenPosition == null) return 0;
+
+        var dx = Math.Abs(up.ScreenPosition.Value.X - down.ScreenPosition.Value.X);
+        var dy = Math.Abs(up.ScreenPosition.Value.Y - down.ScreenPosition.Value.Y);
+        return Math.Max(dx, dy);
     }
 
     private static bool IsTextEntry(IReadOnlyList<RawInputEvent> events) =>
@@ -101,6 +135,7 @@ public static class ActionCoalescingPolicy
         {
             13 => "Enter",
             9 => "Tab",
+            8 => "Backspace",
             27 => "Escape",
             112 => "F1",
             113 => "F2",
@@ -117,6 +152,9 @@ public static class ActionCoalescingPolicy
             var vk => vk.HasValue ? $"VK_{vk.Value}" : "Unknown"
         };
     }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern int GetSystemMetrics(int nIndex);
 }
 
 public readonly record struct RawInputEvent(

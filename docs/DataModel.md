@@ -160,7 +160,7 @@ A captured window and its full control hierarchy (FR-4.1–FR-4.3).
 
 | Property | Type | Required | Description |
 |---|---|---|---|
-| `WindowId` | guid | Required | Stable identifier for this window instance within the session/scan. |
+| `WindowId` | guid | Required | Identifier for this window instance, deterministically derived from the window's native OS handle (`SystemDesign.md` §9) — the same physical window always yields the same `WindowId` for the life of the session/scan, no matter how many times it is activated or re-captured. Exactly one `WindowInformation` entry exists per distinct physical window; re-captures update this same entry in place rather than producing a new one. |
 | `ApplicationTag` | string | Required | Matches a `TargetApplicationInformation.ApplicationTag`. |
 | `ProcessId` | integer | Required | OS process id owning this window at capture time. |
 | `Title` | string | Required (empty string allowed) | Window title text at time of capture. |
@@ -190,8 +190,11 @@ A single UI Automation element, recursively nested to represent hierarchy (FR-3.
 | `BoundingRectangle` | object `{ X, Y, Width, Height: integer }` | Required | Control position/size in physical screen pixels. |
 | `SupportedPatterns` | array of strings | Required (empty array allowed) | UIA control patterns the element supports (e.g. `"Invoke"`, `"Value"`, `"Toggle"`, `"ExpandCollapse"`, `"Selection"`). |
 | `ValueOrText` | string | Optional | Current value/text content, when the element supports the `Value` or `Text` pattern (e.g. a TextBox's current contents or a Label's text). |
-| `DepthInTree` | integer | Required | Distance from the window's `RootElement` (root = 0). |
-| `Children` | array of `ElementInformation` | Required (empty array for leaf elements) | Direct child elements, recursively of the same shape. |
+| `DepthInTree` | integer | Required | Distance from the window's `RootElement` (root = 0). Preserved even when `HierarchyExportScope` (§7.1) omits intermediate ancestors, per `SystemDesign.md` §17.4. |
+| `WasInteractedWith` | boolean | Required (default `false`) | `true` if this element was the `TargetElement` of at least one `RecordedAction` in the session, per the matching rule in `SystemDesign.md` §17.2. Lets a reviewer or downstream tool distinguish the handful of elements the tester actually touched from the rest of the captured tree without manually cross-referencing `Actions`. |
+| `InteractionCount` | integer | Required (default `0`) | How many `RecordedAction`s matched this element. |
+| `InteractedActionIds` | array of guid | Required (empty array allowed) | The `ActionId`s (in `SequenceNumber` order) of every `RecordedAction` that matched this element, per `SystemDesign.md` §17.3 — lets a reader jump directly from an element in the tree to the specific action(s) that touched it. |
+| `Children` | array of `ElementInformation` | Required (empty array for leaf elements) | Direct child elements, recursively of the same shape. May be pruned per `HierarchyExportScope` (§7.1, `SystemDesign.md` §17.4). |
 
 ### 4.8 `ScreenshotInformation`
 
@@ -263,15 +266,16 @@ These live only within the running application. Field sets closely mirror their 
 
 ### 5.3 `WindowSnapshot` (internal equivalent of `WindowInformation`)
 
-Identical field set to `WindowInformation` (§4.6), with one addition used only internally:
+Identical field set to `WindowInformation` (§4.6), with two additions used only internally:
 
 | Additional property | Type | Notes |
 |---|---|---|
 | `StructuralFingerprint` | string (hash) | Used by `HierarchyRecapturePolicy` (`SystemDesign.md` §9) to detect when a re-capture is warranted. Never serialized into the export — it is a purely internal optimization detail. |
+| `NativeWindowHandle` | platform handle (e.g., `IntPtr`) | The OS window handle this snapshot is keyed by (`SystemDesign.md` §9's window-identity rule). Used as the lookup key to find "do I already have a `WindowSnapshot` for this physical window" before ever minting a new `WindowId`. Never serialized into the export — native handles are meaningless outside the live OS session that produced them; `WindowId` (a GUID, stable only *within* this session, derived once from the handle the first time it is seen) is the exported identifier. |
 
 ### 5.4 `ElementInfo` (internal equivalent of `ElementInformation`)
 
-Identical field set to `ElementInformation` (§4.7). No internal-only additions; the two are effectively the same shape by design, kept as distinct types only to preserve the layering rule that Domain/Application never reference an Export-namespace type directly (`Architecture.md` §1, principle 5).
+Identical field set to `ElementInformation` (§4.7), **except** `WasInteractedWith`, `InteractionCount`, and `InteractedActionIds` are *not* present on the internal `ElementInfo` type. Those three fields are computed by `ExportService` only at export time, by cross-referencing the session's `Actions` against the final captured trees (`SystemDesign.md` §17.1–§17.3) — they are a property of the *export*, not of live capture state, so the internal domain type has no need to track them during recording. Aside from this export-only addition, the two types are otherwise the same shape by design, kept as distinct types only to preserve the layering rule that Domain/Application never reference an Export-namespace type directly (`Architecture.md` §1, principle 5).
 
 ### 5.5 `ScreenshotReference` (internal equivalent of `ScreenshotInformation`)
 
@@ -348,6 +352,7 @@ A saved, reusable target configuration (FR-1.5, FR-8.3).
 | `DefaultReadinessConditionTimeoutSeconds` | integer | Required (default `30`) | Used by any `LaunchStep` that does not set `ReadinessTimeoutSecondsOverride`. |
 | `DefaultReadinessPollIntervalMilliseconds` | integer | Required (default `250`) | Used by `ApplicationLaunchOrchestrator` (`SystemDesign.md` §4.1). |
 | `MaxHierarchyElementCount` | integer | Required (default `5000`) | Safety cap referenced in `SystemDesign.md` §9. |
+| `HierarchyExportScope` | enum: `FullTree`, `InteractedElementsWithAncestorPath`, `InteractedElementsOnly` | Required (default `FullTree`) | Controls how much of each captured window's control tree is included in an export, per the pruning rules in `SystemDesign.md` §17.4 — lets a tester trade full context (default) for a leaner export focused on what was actually interacted with. Applies to both Flow Recorder session exports and standalone Smart UI Scanner exports. |
 | `VerboseDiagnosticLoggingEnabled` | boolean | Required (default `false`) | Opt-in logging that may include captured UI text content (`SystemDesign.md` §16) — must remain off by default. |
 | `LastModifiedAtUtc` | timestamp | Required | Standard audit field. |
 
@@ -379,6 +384,15 @@ A lightweight, non-exported projection used only to render FR-8.1's session list
 - A **MAJOR** increment may remove or rename fields, or change a field's type/meaning; consumers must check `SchemaVersion` before assuming shape.
 - `ExportService` (`Architecture.md` §3.2) validates every export against its declared `SchemaVersion` before writing (PRD NFR "Data integrity"); a validation failure must block the write rather than produce a partially-invalid file.
 - Internal Domain Models (§5) carry no independent version number — they are never persisted outside this application's own working session storage (`SystemDesign.md` §12), which is allowed to change shape freely between tool versions since it is not a public contract.
+
+### 9.1 Schema Changelog
+
+| Version | Change | Type |
+|---|---|---|
+| `1.0.0` | Initial MVP export contract (§4). | — |
+| `1.1.0` | Added `WasInteractedWith`, `InteractionCount`, `InteractedActionIds` to `ElementInformation` (§4.7); added `HierarchyExportScope` to `Settings` (§7.1); no existing field removed, renamed, or reinterpreted. | MINOR — purely additive; a consumer built against `1.0.0` that ignores unknown fields reads a `1.1.0` export without modification. |
+
+Future entries are appended to this table, never inserted out of order, so the changelog itself remains a reliable audit trail of the export contract's history.
 
 ---
 
