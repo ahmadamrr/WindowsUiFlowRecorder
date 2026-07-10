@@ -31,6 +31,8 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
     private readonly ConcurrentQueue<RawInputEvent> _inputQueue = new();
     private readonly ConcurrentDictionary<IntPtr, Guid> _windowHandleMap = new();
     private int _sequenceNumber;
+    private Task? _captureLoopTask;
+    private Task? _heartbeatTask;
 
     private const int HeartbeatThresholdSeconds = 15;
     private readonly int _recorderProcessId;
@@ -138,8 +140,8 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
             OnWindowOpened,
             ct);
 
-        _ = Task.Run(() => CaptureProcessingLoopAsync(_captureCts.Token), ct);
-        _ = Task.Run(() => HeartbeatMonitorAsync(_captureCts.Token), ct);
+        _captureLoopTask = Task.Run(() => CaptureProcessingLoopAsync(_captureCts.Token), ct);
+        _heartbeatTask = Task.Run(() => HeartbeatMonitorAsync(_captureCts.Token), ct);
 
         SetState(RecordingSessionState.Recording);
         _logger.LogInformation("Recording started for session {SessionId} with {ContextCount} contexts",
@@ -192,6 +194,14 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
         }
 
         _captureCts?.Cancel();
+
+        if (_captureLoopTask != null)
+        {
+            try { await _captureLoopTask.WaitAsync(TimeSpan.FromSeconds(10)); }
+            catch (TimeoutException) { _logger.LogWarning("Capture loop did not exit within 10s timeout"); }
+            catch (OperationCanceledException) { _logger.LogDebug("Capture loop was cancelled"); }
+            catch (Exception ex) { _logger.LogError(ex, "Capture loop exited with error"); }
+        }
 
         await _inputHook.UnsubscribeAsync();
         await _uiAutomation.UnsubscribeAllAsync();
