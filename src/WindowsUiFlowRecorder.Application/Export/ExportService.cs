@@ -149,14 +149,19 @@ public class ExportService : IExportService
                 a.EnteredText, a.KeyName, a.PreviousWindowId, a.ScreenshotId))
             .ToList();
 
+        var targetPids = session.TargetApplicationContexts
+            .Select(c => c.ProcessId)
+            .ToHashSet();
+
         var windows = session.Windows.Values
-            .Where(w => w.ProcessId != _recorderProcessId)
+            .Where(w => w.ProcessId != _recorderProcessId && targetPids.Contains(w.ProcessId))
             .Select(MapWindow)
             .ToList();
 
         var scope = DetermineHierarchyExportScope(session);
         MarkInteractedElements(windows, session.Actions);
         windows = PruneHierarchy(windows, scope);
+        windows = windows.Where(w => w.RootElement != null).ToList();
 
         var screenshotsSubfolder = "recording_screenshots";
 
@@ -212,7 +217,7 @@ private static ElementInformation MapElement(ElementInfo e) => new(
 
     private static HierarchyExportScope DetermineHierarchyExportScope(RecordingSession session)
     {
-        return HierarchyExportScope.FullTree;
+        return HierarchyExportScope.InteractedElementsWithAncestorPath;
     }
 
     private static void MarkInteractedElements(
@@ -314,10 +319,25 @@ private static ElementInformation MapElement(ElementInfo e) => new(
 
         var hasInteractedDescendant = prunedChildren.Count > 0 || node.WasInteractedWith;
 
-        if (hasInteractedDescendant)
+        if (!hasInteractedDescendant)
+            return null!;
+
+        if (node.WasInteractedWith)
             return node with { Children = prunedChildren.AsReadOnly() };
 
-        return null!;
+        return TrimToAncestor(node, prunedChildren.AsReadOnly());
+    }
+
+    private static ElementInformation TrimToAncestor(
+        ElementInformation node, IReadOnlyList<ElementInformation> children)
+    {
+        return new ElementInformation(
+            node.ElementId, node.AutomationId, node.Name,
+            node.ControlType, node.LocalizedControlType, node.ClassName, node.FrameworkId,
+            null, false, false, false,
+            new BoundingRectangle(0, 0, 0, 0), [], null, 0, 0,
+            false, 0, [],
+            children);
     }
 }
 
