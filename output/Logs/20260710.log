@@ -54,3 +54,42 @@
           at WindowsUiFlowRecorder.Application.Recording.RecordingSessionService.ExportSessionAsync(String outputDirectory, CancellationToken ct) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Application\Recording\RecordingSessionService.cs:line 289
 02:53:23.228 [WARN ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Session error: Export failed due to concurrent modification. Please try again.
 02:53:23.228 [WARN ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Session error: Export failed due to concurrent modification. Please try again.
+03:15:50.806 [INFO ] WindowsUiFlowRecorder.Presentation.App: Windows UI Flow Recorder & Smart UI Scanner v0.1.0
+03:15:51.276 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Loading profiles...
+03:15:51.369 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Got 2 profiles from service
+03:15:51.369 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Selected profile: Default Single App
+03:15:51.454 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Loading profiles...
+03:15:51.455 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Got 2 profiles from service
+03:15:51.458 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Selected profile: Default Single App
+03:16:48.266 [INFO ] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: Session configured with 1 launch steps
+03:16:48.270 [INFO ] WindowsUiFlowRecorder.Application.Launching.ApplicationLaunchOrchestrator: Launching step 1: eadmin application
+03:16:48.345 [INFO ] WindowsUiFlowRecorder.Infrastructure.Processes.ProcessLaunchMonitor: Started process 4172: C:\SPHERE_HSM\Admin Application\AdminApp.exe
+03:16:49.619 [INFO ] WindowsUiFlowRecorder.Application.Launching.ApplicationLaunchOrchestrator: Step 1 (eadmin application) ready
+03:16:49.624 [INFO ] WindowsUiFlowRecorder.Infrastructure.Input.GlobalInputHook: Global input hooks installed on dedicated thread (kb:True, mouse:True)
+03:16:49.624 [INFO ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: UIA event listeners active for 1 contexts
+03:16:49.651 [INFO ] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: Recording started for session 5d2c82d6-e50c-4e93-ad37-c88d0b235a22 with 1 contexts
+03:17:04.669 [WARN ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: Failed to get window at point (1625,279)
+03:17:04.669 [WARN ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: --- Exception ---
+03:17:04.669 [WARN ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: Type: System.UnauthorizedAccessException
+03:17:04.669 [WARN ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: Message: Access is denied. (0x80070005 (E_ACCESSDENIED))
+03:17:04.669 [WARN ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: StackTrace:
+          at Interop.UIAutomationClient.CUIAutomation8Class.ElementFromPoint(tagPOINT pt)
+          at FlaUI.UIA3.UIA3Automation.<>c__DisplayClass36_0.<FromPoint>b__0()
+          at FlaUI.Core.Tools.Com.Call[T](Func`1 nativeAction)
+          at FlaUI.UIA3.UIA3Automation.FromPoint(Point point)
+          at WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider.GetWindowAtPointAsync(ScreenPoint point, Int32 maxElementCount, CancellationToken ct) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Infrastructure\Automation\FlaUiAutomationProvider.cs:line 112
+03:17:04.674 [WARN ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: Failed to get element at point (1625,279)
+03:17:04.674 [WARN ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: --- Exception ---
+03:17:04.674 [WARN ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: Type: System.UnauthorizedAccessException
+03:17:04.674 [WARN ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: Message: Access is denied. (0x80070005 (E_ACCESSDENIED))
+03:17:04.674 [WARN ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: StackTrace:
+          at Interop.UIAutomationClient.CUIAutomation8Class.ElementFromPoint(tagPOINT pt)
+          at FlaUI.UIA3.UIA3Automation.<>c__DisplayClass36_0.<FromPoint>b__0()
+          at FlaUI.Core.Tools.Com.Call[T](Func`1 nativeAction)
+          at FlaUI.UIA3.UIA3Automation.FromPoint(Point point)
+          at WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider.GetElementAtPointAsync(ScreenPoint point, CancellationToken ct) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Infrastructure\Automation\FlaUiAutomationProvider.cs:line 28
+03:17:05.699 [INFO ] WindowsUiFlowRecorder.Infrastructure.Input.GlobalInputHook: Global input hooks removed
+03:17:05.699 [INFO ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: UIA event listeners removed
+03:17:05.727 [INFO ] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: Session 5d2c82d6-e50c-4e93-ad37-c88d0b235a22 stopped with 3 actions and 2 windows
+03:17:09.463 [INFO ] WindowsUiFlowRecorder.Infrastructure.Persistence.ExportWriter: Export written to D:\GIT\WindowsUiFlowRecorder\output\recording_Session_20260710_031649_20260710_031709.json
+03:17:09.464 [INFO ] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: Session exported to D:\GIT\WindowsUiFlowRecorder\output
