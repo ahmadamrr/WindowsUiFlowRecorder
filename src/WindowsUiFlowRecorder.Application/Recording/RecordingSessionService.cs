@@ -256,33 +256,62 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
 
     public async Task<Result> ExportSessionAsync(string outputDirectory, CancellationToken ct)
     {
-        RecordingSession? session;
+        RecordingSession sessionForExport;
         lock (_lock)
         {
             if (CurrentState is not (RecordingSessionState.Reviewing or RecordingSessionState.Stopped or RecordingSessionState.Exported))
                 return Result.Failure(FailureReason.Unknown, "Session must be in review state to export");
 
-            session = _session;
-            if (session == null)
+            if (_session == null)
                 return Result.Failure(FailureReason.SessionNotFound, "No session to export");
+
+            sessionForExport = new RecordingSession
+            {
+                SessionId = _session.SessionId,
+                Name = _session.Name,
+                Note = _session.Note,
+                State = _session.State,
+                ApplicationProfileId = _session.ApplicationProfileId,
+                TargetApplicationContexts = [.. _session.TargetApplicationContexts],
+                Actions = [.. _session.Actions],
+                Windows = new Dictionary<Guid, WindowSnapshot>(_session.Windows),
+                Screenshots = [.. _session.Screenshots],
+                CreatedAtUtc = _session.CreatedAtUtc,
+                StartedAtUtc = _session.StartedAtUtc,
+                StoppedAtUtc = _session.StoppedAtUtc
+            };
         }
 
         SetState(RecordingSessionState.Exporting);
 
-        var result = await _exportService.ExportSessionAsync(session, outputDirectory, ct);
+        try
+        {
+            var result = await _exportService.ExportSessionAsync(sessionForExport, outputDirectory, ct);
 
-        if (result.IsSuccess)
-        {
-            SetState(RecordingSessionState.Exported);
-            _logger.LogInformation("Session exported to {Path}", outputDirectory);
+            if (result.IsSuccess)
+            {
+                SetState(RecordingSessionState.Exported);
+                _logger.LogInformation("Session exported to {Path}", outputDirectory);
+            }
+            else
+            {
+                SetState(RecordingSessionState.Reviewing);
+                ErrorOccurred?.Invoke(result.ErrorMessage ?? "Export failed");
+            }
+
+            return result;
         }
-        else
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Collection was modified"))
         {
+            _logger.LogError(ex,
+                "Export failed - concurrent modification detected on snapshot. " +
+                "Actions={Actions}, Windows={Windows}, Screenshots={Screenshots}",
+                sessionForExport.Actions.Count, sessionForExport.Windows.Count,
+                sessionForExport.Screenshots.Count);
             SetState(RecordingSessionState.Reviewing);
-            ErrorOccurred?.Invoke(result.ErrorMessage ?? "Export failed");
+            ErrorOccurred?.Invoke("Export failed due to concurrent modification. Please try again.");
+            return Result.Failure(FailureReason.Unknown, "Concurrent modification during export");
         }
-
-        return result;
     }
 
     private void OnRawInputEvent(RawInputEvent evt)
