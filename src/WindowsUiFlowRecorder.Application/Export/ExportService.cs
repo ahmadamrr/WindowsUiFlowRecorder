@@ -144,7 +144,7 @@ public class ExportService : IExportService
             .Select(a => new RecordedActionExport(
                 a.ActionId, a.SequenceNumber, a.TimestampUtc,
                 a.ActionType.ToString(), a.ApplicationTag, a.WindowId,
-                a.TargetElement != null ? MapElement(a.TargetElement) : null,
+                a.TargetElement != null ? MapElementNoChildren(a.TargetElement) : null,
                 a.ElementPath, a.ScreenPoint, a.DragStartPoint,
                 a.EnteredText, a.KeyName, a.PreviousWindowId, a.ScreenshotId))
             .ToList();
@@ -214,6 +214,13 @@ private static ElementInformation MapElement(ElementInfo e) => new(
         e.BoundingRectangle, e.SupportedPatterns, e.ValueOrText, e.DepthInTree,
         e.ProcessId, false, 0, [],
         e.Children.Select(MapElement).ToList());
+
+    private static ElementInformation MapElementNoChildren(ElementInfo e) => new(
+        e.ElementId, e.AutomationId, e.Name, e.ControlType, e.LocalizedControlType,
+        e.ClassName, e.FrameworkId, e.HelpText, e.IsEnabled, e.IsOffscreen, e.IsKeyboardFocusable,
+        e.BoundingRectangle, e.SupportedPatterns, e.ValueOrText, e.DepthInTree,
+        e.ProcessId, false, 0, [],
+        []);
 
     private static HierarchyExportScope DetermineHierarchyExportScope(RecordingSession session)
     {
