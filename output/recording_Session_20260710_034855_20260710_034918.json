@@ -1,0 +1,2018 @@
+{
+  "SchemaVersion": "1.1.0",
+  "ToolVersion": "0.1.0",
+  "ExportedAtUtc": "2026-07-10T03:49:18.3139083Z",
+  "ExportKind": "RecordingSession",
+  "RecordingSession": {
+    "SessionId": "b8f0e06e-4404-4070-b73f-1510fe136a5d",
+    "Name": "Session_20260710_034855",
+    "Note": null,
+    "CreatedAtUtc": "2026-07-10T03:48:55.5251565Z",
+    "StartedAtUtc": "2026-07-10T03:48:55.5251568Z",
+    "StoppedAtUtc": "2026-07-10T03:49:13.6016872Z",
+    "DurationSeconds": 18,
+    "TerminationReason": "UserStopped",
+    "LaunchChain": null,
+    "TargetApplications": [
+      {
+        "ApplicationTag": "eadmin application",
+        "ExecutablePath": "C:\\SPHERE_HSM\\Admin Application\\AdminApp.exe",
+        "ProcessId": 12756,
+        "LaunchOrder": 1,
+        "LaunchedAtUtc": "2026-07-10T03:48:54.4797907Z",
+        "TerminatedAtUtc": null,
+        "TerminationReason": "NotTerminated"
+      }
+    ],
+    "Actions": [
+      {
+        "ActionId": "08090837-d17e-4c23-82f5-e56dc5526f90",
+        "SequenceNumber": 7,
+        "TimestampUtc": "2026-07-10T03:49:05.2917372Z",
+        "ActionType": "Click",
+        "ApplicationTag": "eadmin application",
+        "WindowId": "c5c58feb-f366-4b07-a96b-cdc07b4e4167",
+        "TargetElement": {
+          "ElementId": "pnlMain",
+          "AutomationId": "pnlMain",
+          "Name": "",
+          "ControlType": "Pane",
+          "LocalizedControlType": null,
+          "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+          "FrameworkId": "WinForm",
+          "HelpText": "",
+          "IsEnabled": true,
+          "IsOffscreen": false,
+          "IsKeyboardFocusable": false,
+          "BoundingRectangle": {
+            "X": 421,
+            "Y": 132,
+            "Width": 1078,
+            "Height": 768
+          },
+          "SupportedPatterns": [
+            "Id"
+          ],
+          "ValueOrText": null,
+          "DepthInTree": 0,
+          "ProcessId": 12756,
+          "WasInteractedWith": false,
+          "InteractionCount": 0,
+          "InteractedActionIds": [],
+          "Children": [
+            {
+              "ElementId": "statusStrip1",
+              "AutomationId": "statusStrip1",
+              "Name": "Session - Clossed",
+              "ControlType": "StatusBar",
+              "LocalizedControlType": null,
+              "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+              "FrameworkId": "WinForm",
+              "HelpText": "",
+              "IsEnabled": true,
+              "IsOffscreen": false,
+              "IsKeyboardFocusable": false,
+              "BoundingRectangle": {
+                "X": 484,
+                "Y": 877,
+                "Width": 1014,
+                "Height": 22
+              },
+              "SupportedPatterns": [
+                "Id"
+              ],
+              "ValueOrText": null,
+              "DepthInTree": 1,
+              "ProcessId": 12756,
+              "WasInteractedWith": false,
+              "InteractionCount": 0,
+              "InteractedActionIds": [],
+              "Children": [
+                {
+                  "ElementId": "4a15b95a-0649-446a-8e34-8c5f553afecc",
+                  "AutomationId": null,
+                  "Name": null,
+                  "ControlType": "Unknown",
+                  "LocalizedControlType": null,
+                  "ClassName": null,
+                  "FrameworkId": null,
+                  "HelpText": null,
+                  "IsEnabled": false,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 0,
+                    "Y": 0,
+                    "Width": 0,
+                    "Height": 0
+                  },
+                  "SupportedPatterns": [],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 0,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                }
+              ]
+            },
+            {
+              "ElementId": "pnlLeftbar",
+              "AutomationId": "pnlLeftbar",
+              "Name": "Click to login!",
+              "ControlType": "Pane",
+              "LocalizedControlType": null,
+              "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+              "FrameworkId": "WinForm",
+              "HelpText": "",
+              "IsEnabled": true,
+              "IsOffscreen": false,
+              "IsKeyboardFocusable": false,
+              "BoundingRectangle": {
+                "X": 422,
+                "Y": 183,
+                "Width": 62,
+                "Height": 716
+              },
+              "SupportedPatterns": [
+                "Id"
+              ],
+              "ValueOrText": null,
+              "DepthInTree": 1,
+              "ProcessId": 12756,
+              "WasInteractedWith": false,
+              "InteractionCount": 0,
+              "InteractedActionIds": [],
+              "Children": [
+                {
+                  "ElementId": "btnSync",
+                  "AutomationId": "btnSync",
+                  "Name": "Sync",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 789,
+                    "Width": 62,
+                    "Height": 55
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnSetting",
+                  "AutomationId": "btnSetting",
+                  "Name": "Info",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 623,
+                    "Width": 62,
+                    "Height": 55
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnConfig",
+                  "AutomationId": "btnConfig",
+                  "Name": "Config",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 568,
+                    "Width": 62,
+                    "Height": 55
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnKeyConversion",
+                  "AutomationId": "btnKeyConversion",
+                  "Name": "Import",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": false,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 513,
+                    "Width": 62,
+                    "Height": 55
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnAudit",
+                  "AutomationId": "btnAudit",
+                  "Name": "Audit",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 458,
+                    "Width": 62,
+                    "Height": 55
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnCrypto",
+                  "AutomationId": "btnCrypto",
+                  "Name": "Crypto",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": false,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 403,
+                    "Width": 62,
+                    "Height": 55
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnListKey",
+                  "AutomationId": "btnListKey",
+                  "Name": "Key",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 348,
+                    "Width": 62,
+                    "Height": 55
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnProfile",
+                  "AutomationId": "btnProfile",
+                  "Name": "Profile",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": false,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 293,
+                    "Width": 62,
+                    "Height": 55
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnUser",
+                  "AutomationId": "btnUser",
+                  "Name": "User",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": false,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 238,
+                    "Width": 62,
+                    "Height": 55
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnCustomerKeyCeremony",
+                  "AutomationId": "btnCustomerKeyCeremony",
+                  "Name": "CKC",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 183,
+                    "Width": 62,
+                    "Height": 55
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnReset",
+                  "AutomationId": "btnReset",
+                  "Name": "Reset",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": false,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 844,
+                    "Width": 62,
+                    "Height": 55
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                }
+              ]
+            },
+            {
+              "ElementId": "pnlUp",
+              "AutomationId": "pnlUp",
+              "Name": "",
+              "ControlType": "Pane",
+              "LocalizedControlType": null,
+              "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+              "FrameworkId": "WinForm",
+              "HelpText": "",
+              "IsEnabled": true,
+              "IsOffscreen": false,
+              "IsKeyboardFocusable": false,
+              "BoundingRectangle": {
+                "X": 422,
+                "Y": 133,
+                "Width": 1076,
+                "Height": 50
+              },
+              "SupportedPatterns": [
+                "Id"
+              ],
+              "ValueOrText": null,
+              "DepthInTree": 1,
+              "ProcessId": 12756,
+              "WasInteractedWith": false,
+              "InteractionCount": 0,
+              "InteractedActionIds": [],
+              "Children": [
+                {
+                  "ElementId": "button1",
+                  "AutomationId": "button1",
+                  "Name": "",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 1399,
+                    "Y": 133,
+                    "Width": 50,
+                    "Height": 50
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnLogOut",
+                  "AutomationId": "btnLogOut",
+                  "Name": "",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 1299,
+                    "Y": 133,
+                    "Width": 50,
+                    "Height": 50
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "lbl_clickLogin",
+                  "AutomationId": "lbl_clickLogin",
+                  "Name": "Click to login!",
+                  "ControlType": "Text",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.STATIC.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 476,
+                    "Y": 145,
+                    "Width": 130,
+                    "Height": 25
+                  },
+                  "SupportedPatterns": [
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "pbUser",
+                  "AutomationId": "pbUser",
+                  "Name": "",
+                  "ControlType": "Pane",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 435,
+                    "Y": 141,
+                    "Width": 35,
+                    "Height": 35
+                  },
+                  "SupportedPatterns": [
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnMinimize",
+                  "AutomationId": "btnMinimize",
+                  "Name": "",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 1349,
+                    "Y": 133,
+                    "Width": 50,
+                    "Height": 50
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "btnExit",
+                  "AutomationId": "btnExit",
+                  "Name": "",
+                  "ControlType": "Button",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 1449,
+                    "Y": 133,
+                    "Width": 50,
+                    "Height": 50
+                  },
+                  "SupportedPatterns": [
+                    "Id",
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                }
+              ]
+            },
+            {
+              "ElementId": "picRooky",
+              "AutomationId": "picRooky",
+              "Name": "",
+              "ControlType": "Pane",
+              "LocalizedControlType": null,
+              "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+              "FrameworkId": "WinForm",
+              "HelpText": "",
+              "IsEnabled": true,
+              "IsOffscreen": false,
+              "IsKeyboardFocusable": false,
+              "BoundingRectangle": {
+                "X": 618,
+                "Y": 403,
+                "Width": 720,
+                "Height": 200
+              },
+              "SupportedPatterns": [
+                "Id"
+              ],
+              "ValueOrText": null,
+              "DepthInTree": 1,
+              "ProcessId": 12756,
+              "WasInteractedWith": false,
+              "InteractionCount": 0,
+              "InteractedActionIds": [],
+              "Children": []
+            },
+            {
+              "ElementId": "picIdemia",
+              "AutomationId": "picIdemia",
+              "Name": "",
+              "ControlType": "Pane",
+              "LocalizedControlType": null,
+              "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+              "FrameworkId": "WinForm",
+              "HelpText": "",
+              "IsEnabled": true,
+              "IsOffscreen": false,
+              "IsKeyboardFocusable": false,
+              "BoundingRectangle": {
+                "X": 1264,
+                "Y": 824,
+                "Width": 205,
+                "Height": 50
+              },
+              "SupportedPatterns": [
+                "Id"
+              ],
+              "ValueOrText": null,
+              "DepthInTree": 1,
+              "ProcessId": 12756,
+              "WasInteractedWith": false,
+              "InteractionCount": 0,
+              "InteractedActionIds": [],
+              "Children": []
+            }
+          ]
+        },
+        "ElementPath": [],
+        "ScreenPoint": {
+          "X": 1240,
+          "Y": 725
+        },
+        "DragStartPoint": null,
+        "EnteredText": null,
+        "KeyName": null,
+        "PreviousWindowId": null,
+        "ScreenshotId": null
+      },
+      {
+        "ActionId": "dc2be6f1-7631-44ec-b0c6-0f5f811d959f",
+        "SequenceNumber": 8,
+        "TimestampUtc": "2026-07-10T03:49:10.6531522Z",
+        "ActionType": "Click",
+        "ApplicationTag": "eadmin application",
+        "WindowId": "7a80c119-e3a5-4dd8-8cf4-a7ad9ee93b86",
+        "TargetElement": {
+          "ElementId": "MainForm",
+          "AutomationId": "MainForm",
+          "Name": "..:: HSM Admin Application",
+          "ControlType": "Window",
+          "LocalizedControlType": null,
+          "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+          "FrameworkId": "WinForm",
+          "HelpText": "",
+          "IsEnabled": false,
+          "IsOffscreen": false,
+          "IsKeyboardFocusable": false,
+          "BoundingRectangle": {
+            "X": 420,
+            "Y": 131,
+            "Width": 1080,
+            "Height": 770
+          },
+          "SupportedPatterns": [
+            "Id",
+            "Id"
+          ],
+          "ValueOrText": null,
+          "DepthInTree": 0,
+          "ProcessId": 12756,
+          "WasInteractedWith": false,
+          "InteractionCount": 0,
+          "InteractedActionIds": [],
+          "Children": [
+            {
+              "ElementId": "AdminLogin",
+              "AutomationId": "AdminLogin",
+              "Name": "..:: HSM Admin App",
+              "ControlType": "Window",
+              "LocalizedControlType": null,
+              "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+              "FrameworkId": "WinForm",
+              "HelpText": "",
+              "IsEnabled": true,
+              "IsOffscreen": false,
+              "IsKeyboardFocusable": false,
+              "BoundingRectangle": {
+                "X": 448,
+                "Y": 236,
+                "Width": 1024,
+                "Height": 560
+              },
+              "SupportedPatterns": [
+                "Id",
+                "Id"
+              ],
+              "ValueOrText": null,
+              "DepthInTree": 1,
+              "ProcessId": 12756,
+              "WasInteractedWith": false,
+              "InteractionCount": 0,
+              "InteractedActionIds": [],
+              "Children": [
+                {
+                  "ElementId": "adminLogon1",
+                  "AutomationId": "adminLogon1",
+                  "Name": "",
+                  "ControlType": "Pane",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 448,
+                    "Y": 236,
+                    "Width": 1024,
+                    "Height": 560
+                  },
+                  "SupportedPatterns": [
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": [
+                    {
+                      "ElementId": "panel1",
+                      "AutomationId": "panel1",
+                      "Name": "",
+                      "ControlType": "Pane",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 448,
+                        "Y": 236,
+                        "Width": 1024,
+                        "Height": 560
+                      },
+                      "SupportedPatterns": [
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": [
+                        {
+                          "ElementId": "btnExit",
+                          "AutomationId": "btnExit",
+                          "Name": "Auth. Method:",
+                          "ControlType": "Button",
+                          "LocalizedControlType": null,
+                          "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                          "FrameworkId": "WinForm",
+                          "HelpText": "",
+                          "IsEnabled": true,
+                          "IsOffscreen": false,
+                          "IsKeyboardFocusable": false,
+                          "BoundingRectangle": {
+                            "X": 1437,
+                            "Y": 236,
+                            "Width": 35,
+                            "Height": 35
+                          },
+                          "SupportedPatterns": [
+                            "Id",
+                            "Id"
+                          ],
+                          "ValueOrText": null,
+                          "DepthInTree": 4,
+                          "ProcessId": 12756,
+                          "WasInteractedWith": false,
+                          "InteractionCount": 0,
+                          "InteractedActionIds": [],
+                          "Children": []
+                        },
+                        {
+                          "ElementId": "pnlEnrollment",
+                          "AutomationId": "pnlEnrollment",
+                          "Name": "User Login",
+                          "ControlType": "Pane",
+                          "LocalizedControlType": null,
+                          "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+                          "FrameworkId": "WinForm",
+                          "HelpText": "",
+                          "IsEnabled": true,
+                          "IsOffscreen": false,
+                          "IsKeyboardFocusable": false,
+                          "BoundingRectangle": {
+                            "X": 477,
+                            "Y": 470,
+                            "Width": 433,
+                            "Height": 300
+                          },
+                          "SupportedPatterns": [
+                            "Id"
+                          ],
+                          "ValueOrText": null,
+                          "DepthInTree": 4,
+                          "ProcessId": 12756,
+                          "WasInteractedWith": false,
+                          "InteractionCount": 0,
+                          "InteractedActionIds": [],
+                          "Children": [
+                            {
+                              "ElementId": "label4",
+                              "AutomationId": "label4",
+                              "Name": "Auth. Method:",
+                              "ControlType": "Text",
+                              "LocalizedControlType": null,
+                              "ClassName": "WindowsForms10.STATIC.app.0.2e9e79f_r7_ad1",
+                              "FrameworkId": "WinForm",
+                              "HelpText": "",
+                              "IsEnabled": true,
+                              "IsOffscreen": false,
+                              "IsKeyboardFocusable": false,
+                              "BoundingRectangle": {
+                                "X": 489,
+                                "Y": 535,
+                                "Width": 137,
+                                "Height": 25
+                              },
+                              "SupportedPatterns": [
+                                "Id"
+                              ],
+                              "ValueOrText": null,
+                              "DepthInTree": 5,
+                              "ProcessId": 12756,
+                              "WasInteractedWith": false,
+                              "InteractionCount": 0,
+                              "InteractedActionIds": [],
+                              "Children": []
+                            },
+                            {
+                              "ElementId": "rbPassword",
+                              "AutomationId": "rbPassword",
+                              "Name": "Password",
+                              "ControlType": "RadioButton",
+                              "LocalizedControlType": null,
+                              "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                              "FrameworkId": "WinForm",
+                              "HelpText": "",
+                              "IsEnabled": true,
+                              "IsOffscreen": false,
+                              "IsKeyboardFocusable": false,
+                              "BoundingRectangle": {
+                                "X": 763,
+                                "Y": 533,
+                                "Width": 111,
+                                "Height": 29
+                              },
+                              "SupportedPatterns": [
+                                "Id",
+                                "Id",
+                                "Id"
+                              ],
+                              "ValueOrText": null,
+                              "DepthInTree": 5,
+                              "ProcessId": 12756,
+                              "WasInteractedWith": false,
+                              "InteractionCount": 0,
+                              "InteractedActionIds": [],
+                              "Children": []
+                            },
+                            {
+                              "ElementId": "btnLogin",
+                              "AutomationId": "btnLogin",
+                              "Name": "",
+                              "ControlType": "Button",
+                              "LocalizedControlType": null,
+                              "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                              "FrameworkId": "WinForm",
+                              "HelpText": "",
+                              "IsEnabled": true,
+                              "IsOffscreen": false,
+                              "IsKeyboardFocusable": false,
+                              "BoundingRectangle": {
+                                "X": 850,
+                                "Y": 717,
+                                "Width": 40,
+                                "Height": 40
+                              },
+                              "SupportedPatterns": [
+                                "Id",
+                                "Id"
+                              ],
+                              "ValueOrText": null,
+                              "DepthInTree": 5,
+                              "ProcessId": 12756,
+                              "WasInteractedWith": false,
+                              "InteractionCount": 0,
+                              "InteractedActionIds": [],
+                              "Children": []
+                            },
+                            {
+                              "ElementId": "label1",
+                              "AutomationId": "label1",
+                              "Name": "Session:",
+                              "ControlType": "Text",
+                              "LocalizedControlType": null,
+                              "ClassName": "WindowsForms10.STATIC.app.0.2e9e79f_r7_ad1",
+                              "FrameworkId": "WinForm",
+                              "HelpText": "",
+                              "IsEnabled": true,
+                              "IsOffscreen": false,
+                              "IsKeyboardFocusable": false,
+                              "BoundingRectangle": {
+                                "X": 489,
+                                "Y": 491,
+                                "Width": 80,
+                                "Height": 25
+                              },
+                              "SupportedPatterns": [
+                                "Id"
+                              ],
+                              "ValueOrText": null,
+                              "DepthInTree": 5,
+                              "ProcessId": 12756,
+                              "WasInteractedWith": false,
+                              "InteractionCount": 0,
+                              "InteractedActionIds": [],
+                              "Children": []
+                            },
+                            {
+                              "ElementId": "cbSession",
+                              "AutomationId": "cbSession",
+                              "Name": "User Login",
+                              "ControlType": "ComboBox",
+                              "LocalizedControlType": null,
+                              "ClassName": "WindowsForms10.COMBOBOX.app.0.2e9e79f_r7_ad1",
+                              "FrameworkId": "WinForm",
+                              "HelpText": "",
+                              "IsEnabled": true,
+                              "IsOffscreen": false,
+                              "IsKeyboardFocusable": false,
+                              "BoundingRectangle": {
+                                "X": 637,
+                                "Y": 488,
+                                "Width": 257,
+                                "Height": 33
+                              },
+                              "SupportedPatterns": [
+                                "Id",
+                                "Id",
+                                "Id"
+                              ],
+                              "ValueOrText": null,
+                              "DepthInTree": 5,
+                              "ProcessId": 12756,
+                              "WasInteractedWith": false,
+                              "InteractionCount": 0,
+                              "InteractedActionIds": [],
+                              "Children": [
+                                {
+                                  "ElementId": "05d25eb1-3091-4795-923b-a2f635f0100a",
+                                  "AutomationId": null,
+                                  "Name": null,
+                                  "ControlType": "Unknown",
+                                  "LocalizedControlType": null,
+                                  "ClassName": null,
+                                  "FrameworkId": null,
+                                  "HelpText": null,
+                                  "IsEnabled": false,
+                                  "IsOffscreen": false,
+                                  "IsKeyboardFocusable": false,
+                                  "BoundingRectangle": {
+                                    "X": 0,
+                                    "Y": 0,
+                                    "Width": 0,
+                                    "Height": 0
+                                  },
+                                  "SupportedPatterns": [],
+                                  "ValueOrText": null,
+                                  "DepthInTree": 6,
+                                  "ProcessId": 0,
+                                  "WasInteractedWith": false,
+                                  "InteractionCount": 0,
+                                  "InteractedActionIds": [],
+                                  "Children": []
+                                },
+                                {
+                                  "ElementId": "7aa21b7b-50d6-45a4-b030-a96a0b953a8e",
+                                  "AutomationId": null,
+                                  "Name": null,
+                                  "ControlType": "Unknown",
+                                  "LocalizedControlType": null,
+                                  "ClassName": null,
+                                  "FrameworkId": null,
+                                  "HelpText": null,
+                                  "IsEnabled": false,
+                                  "IsOffscreen": false,
+                                  "IsKeyboardFocusable": false,
+                                  "BoundingRectangle": {
+                                    "X": 0,
+                                    "Y": 0,
+                                    "Width": 0,
+                                    "Height": 0
+                                  },
+                                  "SupportedPatterns": [],
+                                  "ValueOrText": null,
+                                  "DepthInTree": 6,
+                                  "ProcessId": 0,
+                                  "WasInteractedWith": false,
+                                  "InteractionCount": 0,
+                                  "InteractedActionIds": [],
+                                  "Children": []
+                                }
+                              ]
+                            },
+                            {
+                              "ElementId": "rbSMA",
+                              "AutomationId": "rbSMA",
+                              "Name": "Smartcard",
+                              "ControlType": "RadioButton",
+                              "LocalizedControlType": null,
+                              "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                              "FrameworkId": "WinForm",
+                              "HelpText": "",
+                              "IsEnabled": true,
+                              "IsOffscreen": false,
+                              "IsKeyboardFocusable": false,
+                              "BoundingRectangle": {
+                                "X": 637,
+                                "Y": 533,
+                                "Width": 120,
+                                "Height": 29
+                              },
+                              "SupportedPatterns": [
+                                "Id",
+                                "Id",
+                                "Id"
+                              ],
+                              "ValueOrText": null,
+                              "DepthInTree": 5,
+                              "ProcessId": 12756,
+                              "WasInteractedWith": false,
+                              "InteractionCount": 0,
+                              "InteractedActionIds": [],
+                              "Children": []
+                            }
+                          ]
+                        },
+                        {
+                          "ElementId": "lblTitle",
+                          "AutomationId": "lblTitle",
+                          "Name": "User Login",
+                          "ControlType": "Text",
+                          "LocalizedControlType": null,
+                          "ClassName": "WindowsForms10.STATIC.app.0.2e9e79f_r7_ad1",
+                          "FrameworkId": "WinForm",
+                          "HelpText": "",
+                          "IsEnabled": true,
+                          "IsOffscreen": false,
+                          "IsKeyboardFocusable": false,
+                          "BoundingRectangle": {
+                            "X": 472,
+                            "Y": 420,
+                            "Width": 542,
+                            "Height": 34
+                          },
+                          "SupportedPatterns": [
+                            "Id"
+                          ],
+                          "ValueOrText": null,
+                          "DepthInTree": 4,
+                          "ProcessId": 12756,
+                          "WasInteractedWith": false,
+                          "InteractionCount": 0,
+                          "InteractedActionIds": [],
+                          "Children": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ElementId": "pnlMain",
+              "AutomationId": "pnlMain",
+              "Name": "",
+              "ControlType": "Pane",
+              "LocalizedControlType": null,
+              "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+              "FrameworkId": "WinForm",
+              "HelpText": "",
+              "IsEnabled": true,
+              "IsOffscreen": false,
+              "IsKeyboardFocusable": false,
+              "BoundingRectangle": {
+                "X": 421,
+                "Y": 132,
+                "Width": 1078,
+                "Height": 768
+              },
+              "SupportedPatterns": [
+                "Id"
+              ],
+              "ValueOrText": null,
+              "DepthInTree": 1,
+              "ProcessId": 12756,
+              "WasInteractedWith": false,
+              "InteractionCount": 0,
+              "InteractedActionIds": [],
+              "Children": [
+                {
+                  "ElementId": "statusStrip1",
+                  "AutomationId": "statusStrip1",
+                  "Name": "Session - Clossed",
+                  "ControlType": "StatusBar",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": false,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 484,
+                    "Y": 877,
+                    "Width": 1014,
+                    "Height": 22
+                  },
+                  "SupportedPatterns": [
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": [
+                    {
+                      "ElementId": "b3f491e7-5bf2-49ed-bba2-a6aaf36af582",
+                      "AutomationId": null,
+                      "Name": null,
+                      "ControlType": "Unknown",
+                      "LocalizedControlType": null,
+                      "ClassName": null,
+                      "FrameworkId": null,
+                      "HelpText": null,
+                      "IsEnabled": false,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 0,
+                        "Y": 0,
+                        "Width": 0,
+                        "Height": 0
+                      },
+                      "SupportedPatterns": [],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 0,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    }
+                  ]
+                },
+                {
+                  "ElementId": "pnlLeftbar",
+                  "AutomationId": "pnlLeftbar",
+                  "Name": "Click to login!",
+                  "ControlType": "Pane",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 183,
+                    "Width": 62,
+                    "Height": 716
+                  },
+                  "SupportedPatterns": [
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": [
+                    {
+                      "ElementId": "btnSync",
+                      "AutomationId": "btnSync",
+                      "Name": "Sync",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 422,
+                        "Y": 789,
+                        "Width": 62,
+                        "Height": 55
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnSetting",
+                      "AutomationId": "btnSetting",
+                      "Name": "Info",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 422,
+                        "Y": 623,
+                        "Width": 62,
+                        "Height": 55
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnConfig",
+                      "AutomationId": "btnConfig",
+                      "Name": "Config",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 422,
+                        "Y": 568,
+                        "Width": 62,
+                        "Height": 55
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnKeyConversion",
+                      "AutomationId": "btnKeyConversion",
+                      "Name": "Import",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": false,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 422,
+                        "Y": 513,
+                        "Width": 62,
+                        "Height": 55
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnAudit",
+                      "AutomationId": "btnAudit",
+                      "Name": "Audit",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 422,
+                        "Y": 458,
+                        "Width": 62,
+                        "Height": 55
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnCrypto",
+                      "AutomationId": "btnCrypto",
+                      "Name": "Crypto",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": false,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 422,
+                        "Y": 403,
+                        "Width": 62,
+                        "Height": 55
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnListKey",
+                      "AutomationId": "btnListKey",
+                      "Name": "Key",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 422,
+                        "Y": 348,
+                        "Width": 62,
+                        "Height": 55
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnProfile",
+                      "AutomationId": "btnProfile",
+                      "Name": "Profile",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": false,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 422,
+                        "Y": 293,
+                        "Width": 62,
+                        "Height": 55
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnUser",
+                      "AutomationId": "btnUser",
+                      "Name": "User",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": false,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 422,
+                        "Y": 238,
+                        "Width": 62,
+                        "Height": 55
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnCustomerKeyCeremony",
+                      "AutomationId": "btnCustomerKeyCeremony",
+                      "Name": "CKC",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 422,
+                        "Y": 183,
+                        "Width": 62,
+                        "Height": 55
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnReset",
+                      "AutomationId": "btnReset",
+                      "Name": "Reset",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": false,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 422,
+                        "Y": 844,
+                        "Width": 62,
+                        "Height": 55
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    }
+                  ]
+                },
+                {
+                  "ElementId": "pnlUp",
+                  "AutomationId": "pnlUp",
+                  "Name": "",
+                  "ControlType": "Pane",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 422,
+                    "Y": 133,
+                    "Width": 1076,
+                    "Height": 50
+                  },
+                  "SupportedPatterns": [
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": [
+                    {
+                      "ElementId": "button1",
+                      "AutomationId": "button1",
+                      "Name": "",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 1399,
+                        "Y": 133,
+                        "Width": 50,
+                        "Height": 50
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnLogOut",
+                      "AutomationId": "btnLogOut",
+                      "Name": "",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 1299,
+                        "Y": 133,
+                        "Width": 50,
+                        "Height": 50
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "lbl_clickLogin",
+                      "AutomationId": "lbl_clickLogin",
+                      "Name": "Click to login!",
+                      "ControlType": "Text",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.STATIC.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": false,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 476,
+                        "Y": 145,
+                        "Width": 130,
+                        "Height": 25
+                      },
+                      "SupportedPatterns": [
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "pbUser",
+                      "AutomationId": "pbUser",
+                      "Name": "",
+                      "ControlType": "Pane",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 435,
+                        "Y": 141,
+                        "Width": 35,
+                        "Height": 35
+                      },
+                      "SupportedPatterns": [
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnMinimize",
+                      "AutomationId": "btnMinimize",
+                      "Name": "",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 1349,
+                        "Y": 133,
+                        "Width": 50,
+                        "Height": 50
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    },
+                    {
+                      "ElementId": "btnExit",
+                      "AutomationId": "btnExit",
+                      "Name": "",
+                      "ControlType": "Button",
+                      "LocalizedControlType": null,
+                      "ClassName": "WindowsForms10.BUTTON.app.0.2e9e79f_r7_ad1",
+                      "FrameworkId": "WinForm",
+                      "HelpText": "",
+                      "IsEnabled": true,
+                      "IsOffscreen": false,
+                      "IsKeyboardFocusable": false,
+                      "BoundingRectangle": {
+                        "X": 1449,
+                        "Y": 133,
+                        "Width": 50,
+                        "Height": 50
+                      },
+                      "SupportedPatterns": [
+                        "Id",
+                        "Id"
+                      ],
+                      "ValueOrText": null,
+                      "DepthInTree": 3,
+                      "ProcessId": 12756,
+                      "WasInteractedWith": false,
+                      "InteractionCount": 0,
+                      "InteractedActionIds": [],
+                      "Children": []
+                    }
+                  ]
+                },
+                {
+                  "ElementId": "picRooky",
+                  "AutomationId": "picRooky",
+                  "Name": "",
+                  "ControlType": "Pane",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 618,
+                    "Y": 403,
+                    "Width": 720,
+                    "Height": 200
+                  },
+                  "SupportedPatterns": [
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                },
+                {
+                  "ElementId": "picIdemia",
+                  "AutomationId": "picIdemia",
+                  "Name": "",
+                  "ControlType": "Pane",
+                  "LocalizedControlType": null,
+                  "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+                  "FrameworkId": "WinForm",
+                  "HelpText": "",
+                  "IsEnabled": true,
+                  "IsOffscreen": false,
+                  "IsKeyboardFocusable": false,
+                  "BoundingRectangle": {
+                    "X": 1264,
+                    "Y": 824,
+                    "Width": 205,
+                    "Height": 50
+                  },
+                  "SupportedPatterns": [
+                    "Id"
+                  ],
+                  "ValueOrText": null,
+                  "DepthInTree": 2,
+                  "ProcessId": 12756,
+                  "WasInteractedWith": false,
+                  "InteractionCount": 0,
+                  "InteractedActionIds": [],
+                  "Children": []
+                }
+              ]
+            }
+          ]
+        },
+        "ElementPath": [],
+        "ScreenPoint": {
+          "X": 779,
+          "Y": 513
+        },
+        "DragStartPoint": null,
+        "EnteredText": null,
+        "KeyName": null,
+        "PreviousWindowId": null,
+        "ScreenshotId": null
+      }
+    ],
+    "Windows": [
+      {
+        "WindowId": "c5c58feb-f366-4b07-a96b-cdc07b4e4167",
+        "ApplicationTag": "",
+        "ProcessId": 12756,
+        "Title": "..:: HSM Admin Application",
+        "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+        "BoundingRectangle": {
+          "X": 420,
+          "Y": 131,
+          "Width": 1080,
+          "Height": 770
+        },
+        "FirstCapturedAtUtc": "2026-07-10T03:49:09.1519437Z",
+        "LastUpdatedAtUtc": "2026-07-10T03:49:11.2182311Z",
+        "CaptureCount": 2,
+        "RootElement": {
+          "ElementId": "MainForm",
+          "AutomationId": "MainForm",
+          "Name": "..:: HSM Admin Application",
+          "ControlType": "Window",
+          "LocalizedControlType": null,
+          "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+          "FrameworkId": "WinForm",
+          "HelpText": null,
+          "IsEnabled": false,
+          "IsOffscreen": false,
+          "IsKeyboardFocusable": false,
+          "BoundingRectangle": {
+            "X": 0,
+            "Y": 0,
+            "Width": 0,
+            "Height": 0
+          },
+          "SupportedPatterns": [],
+          "ValueOrText": null,
+          "DepthInTree": 0,
+          "ProcessId": 0,
+          "WasInteractedWith": false,
+          "InteractionCount": 0,
+          "InteractedActionIds": [],
+          "Children": [
+            {
+              "ElementId": "pnlMain",
+              "AutomationId": "pnlMain",
+              "Name": "",
+              "ControlType": "Pane",
+              "LocalizedControlType": null,
+              "ClassName": "WindowsForms10.Window.8.app.0.2e9e79f_r7_ad1",
+              "FrameworkId": "WinForm",
+              "HelpText": "",
+              "IsEnabled": true,
+              "IsOffscreen": false,
+              "IsKeyboardFocusable": false,
+              "BoundingRectangle": {
+                "X": 421,
+                "Y": 132,
+                "Width": 1078,
+                "Height": 768
+              },
+              "SupportedPatterns": [
+                "Id"
+              ],
+              "ValueOrText": null,
+              "DepthInTree": 1,
+              "ProcessId": 12756,
+              "WasInteractedWith": true,
+              "InteractionCount": 1,
+              "InteractedActionIds": [
+                "08090837-d17e-4c23-82f5-e56dc5526f90"
+              ],
+              "Children": []
+            }
+          ]
+        }
+      }
+    ],
+    "Screenshots": []
+  },
+  "StandaloneScan": null
+}
