@@ -218,11 +218,11 @@ private static ElementInformation MapElement(ElementInfo e) => new(
     private static void MarkInteractedElements(
         List<WindowInformation> windows, List<RecordedAction> actions)
     {
-        foreach (var win in windows)
+        for (var i = 0; i < windows.Count; i++)
         {
+            var win = windows[i];
             var updatedRoot = MarkNodes(win.RootElement, actions, win.WindowId);
-            var idx = windows.IndexOf(win);
-            windows[idx] = win with { RootElement = updatedRoot };
+            windows[i] = win with { RootElement = updatedRoot };
         }
     }
 

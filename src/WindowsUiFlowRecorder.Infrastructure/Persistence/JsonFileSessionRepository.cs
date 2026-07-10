@@ -14,7 +14,11 @@ public class JsonFileSessionRepository : ISessionRepository
     {
         WriteIndented = true,
         PropertyNamingPolicy = null,
-        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+        Converters =
+        {
+            new System.Text.Json.Serialization.JsonStringEnumConverter(),
+            new IntPtrJsonConverter()
+        }
     };
 
     public JsonFileSessionRepository(ILogger<JsonFileSessionRepository> logger)
