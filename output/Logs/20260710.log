@@ -1,0 +1,56 @@
+02:52:56.854 [INFO ] WindowsUiFlowRecorder.Presentation.App: Windows UI Flow Recorder & Smart UI Scanner v0.1.0
+02:52:57.341 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Loading profiles...
+02:52:57.438 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Got 2 profiles from service
+02:52:57.439 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Selected profile: Default Single App
+02:52:57.528 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Loading profiles...
+02:52:57.529 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Got 2 profiles from service
+02:52:57.532 [INFO ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Selected profile: Default Single App
+02:53:02.212 [INFO ] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: Session configured with 1 launch steps
+02:53:02.215 [INFO ] WindowsUiFlowRecorder.Application.Launching.ApplicationLaunchOrchestrator: Launching step 1: eadmin application
+02:53:02.258 [INFO ] WindowsUiFlowRecorder.Infrastructure.Processes.ProcessLaunchMonitor: Started process 26716: C:\SPHERE_HSM\Admin Application\AdminApp.exe
+02:53:03.286 [INFO ] WindowsUiFlowRecorder.Application.Launching.ApplicationLaunchOrchestrator: Step 1 (eadmin application) ready
+02:53:03.292 [INFO ] WindowsUiFlowRecorder.Infrastructure.Input.GlobalInputHook: Global input hooks installed on dedicated thread (kb:True, mouse:True)
+02:53:03.292 [INFO ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: UIA event listeners active for 1 contexts
+02:53:03.319 [INFO ] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: Recording started for session 0954d449-73d2-4eb8-8400-43d950856d76 with 1 contexts
+02:53:19.860 [INFO ] WindowsUiFlowRecorder.Infrastructure.Input.GlobalInputHook: Global input hooks removed
+02:53:19.860 [INFO ] WindowsUiFlowRecorder.Infrastructure.Automation.FlaUiAutomationProvider: UIA event listeners removed
+02:53:19.897 [ERROR] WindowsUiFlowRecorder.Infrastructure.Persistence.JsonFileSessionRepository: Failed to save session 0954d449-73d2-4eb8-8400-43d950856d76
+02:53:19.897 [ERROR] WindowsUiFlowRecorder.Infrastructure.Persistence.JsonFileSessionRepository: --- Exception ---
+02:53:19.897 [ERROR] WindowsUiFlowRecorder.Infrastructure.Persistence.JsonFileSessionRepository: Type: System.NotSupportedException
+02:53:19.897 [ERROR] WindowsUiFlowRecorder.Infrastructure.Persistence.JsonFileSessionRepository: Message: Serialization and deserialization of 'System.IntPtr' instances is not supported. Path: $.Windows.NativeWindowHandle.
+02:53:19.897 [ERROR] WindowsUiFlowRecorder.Infrastructure.Persistence.JsonFileSessionRepository: StackTrace:
+          at System.Text.Json.ThrowHelper.ThrowNotSupportedException(WriteStack& state, Exception innerException)
+          at System.Text.Json.Serialization.JsonConverter`1.WriteCore(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+          at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.Serialize(Utf8JsonWriter writer, T& rootValue, Object rootValueBoxed)
+          at System.Text.Json.JsonSerializer.WriteString[TValue](TValue& value, JsonTypeInfo`1 jsonTypeInfo)
+          at System.Text.Json.JsonSerializer.Serialize[TValue](TValue value, JsonSerializerOptions options)
+          at WindowsUiFlowRecorder.Infrastructure.Persistence.JsonFileSessionRepository.SaveSessionAsync(RecordingSession session) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Infrastructure\Persistence\JsonFileSessionRepository.cs:line 33
+02:53:19.897 [ERROR] WindowsUiFlowRecorder.Infrastructure.Persistence.JsonFileSessionRepository: --- Inner Exception ---
+02:53:19.897 [ERROR] WindowsUiFlowRecorder.Infrastructure.Persistence.JsonFileSessionRepository: Type: System.NotSupportedException
+02:53:19.897 [ERROR] WindowsUiFlowRecorder.Infrastructure.Persistence.JsonFileSessionRepository: Message: Serialization and deserialization of 'System.IntPtr' instances is not supported.
+02:53:19.897 [ERROR] WindowsUiFlowRecorder.Infrastructure.Persistence.JsonFileSessionRepository: StackTrace:
+          at System.Text.Json.Serialization.Converters.UnsupportedTypeConverter`1.Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
+          at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+          at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.GetMemberAndWriteJson(Object obj, WriteStack& state, Utf8JsonWriter writer)
+          at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options, WriteStack& state)
+          at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+          at System.Text.Json.Serialization.Converters.DictionaryOfTKeyTValueConverter`3.OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, WriteStack& state)
+          at System.Text.Json.Serialization.JsonDictionaryConverter`3.OnTryWrite(Utf8JsonWriter writer, TDictionary dictionary, JsonSerializerOptions options, WriteStack& state)
+          at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+          at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.GetMemberAndWriteJson(Object obj, WriteStack& state, Utf8JsonWriter writer)
+          at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options, WriteStack& state)
+          at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+          at System.Text.Json.Serialization.JsonConverter`1.WriteCore(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+02:53:19.897 [INFO ] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: Session 0954d449-73d2-4eb8-8400-43d950856d76 stopped with 4 actions and 3 windows
+02:53:23.223 [ERROR] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: Export failed - concurrent modification detected on snapshot. Actions=4, Windows=3, Screenshots=0
+02:53:23.223 [ERROR] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: --- Exception ---
+02:53:23.223 [ERROR] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: Type: System.InvalidOperationException
+02:53:23.223 [ERROR] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: Message: Collection was modified; enumeration operation may not execute.
+02:53:23.223 [ERROR] WindowsUiFlowRecorder.Application.Recording.RecordingSessionService: StackTrace:
+          at System.Collections.Generic.List`1.Enumerator.MoveNext()
+          at WindowsUiFlowRecorder.Application.Export.ExportService.MarkInteractedElements(List`1 windows, List`1 actions) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Application\Export\ExportService.cs:line 221
+          at WindowsUiFlowRecorder.Application.Export.ExportService.MapSessionToExport(RecordingSession session) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Application\Export\ExportService.cs:line 158
+          at WindowsUiFlowRecorder.Application.Export.ExportService.ExportSessionAsync(RecordingSession session, String outputDirectory, CancellationToken ct) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Application\Export\ExportService.cs:line 26
+          at WindowsUiFlowRecorder.Application.Recording.RecordingSessionService.ExportSessionAsync(String outputDirectory, CancellationToken ct) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Application\Recording\RecordingSessionService.cs:line 289
+02:53:23.228 [WARN ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Session error: Export failed due to concurrent modification. Please try again.
+02:53:23.228 [WARN ] WindowsUiFlowRecorder.Presentation.Recorder.RecorderViewModel: Session error: Export failed due to concurrent modification. Please try again.

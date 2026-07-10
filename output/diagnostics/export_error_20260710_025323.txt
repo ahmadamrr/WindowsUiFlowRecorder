@@ -1,0 +1,36 @@
+=== Export Diagnostic Dump ===
+Timestamp (UTC): 2026-07-10T02:53:23.2255106Z
+
+--- Session State ---
+SessionId: 0954d449-73d2-4eb8-8400-43d950856d76
+Name: Session_20260710_025303
+State: Stopped
+Actions.Count: 4
+Windows.Count: 3
+Screenshots.Count: 0
+TargetApplicationContexts.Count: 1
+CreatedAtUtc: 2026-07-10T02:53:03.2891640Z
+StartedAtUtc: 2026-07-10T02:53:03.2891782Z
+StoppedAtUtc: 2026-07-10T02:53:19.8607092Z
+
+--- Actions ---
+  [0] ActionId=54d873f1-cc5f-48e2-9589-c0016ae8447a, Seq=1, Type=FocusChanged, WindowId=205701f0-73a8-467f-9a9c-3ed69e86627a, AppTag=eadmin application, TargetElement.ProcessId=0, TargetElement.ControlType=Unknown
+  [1] ActionId=cdcab59e-e228-4859-b44e-a93d8209550e, Seq=2, Type=Drag, WindowId=706e4c5c-9971-4a00-aa6d-2184c41619c6, AppTag=eadmin application, TargetElement.ProcessId=0, TargetElement.ControlType=Unknown
+  [2] ActionId=c26598d0-08f1-458c-a4bf-ca0b76785619, Seq=3, Type=Click, WindowId=3d3f1c61-9ed6-49e9-8d92-bc94709d139e, AppTag=eadmin application, TargetElement.ProcessId=0, TargetElement.ControlType=Unknown
+  [3] ActionId=1dad9aed-88ed-4f75-8c04-6228fbe4e695, Seq=4, Type=FocusChanged, WindowId=b119b81f-d4f1-4547-a143-42a3ad810ac8, AppTag=eadmin application, TargetElement.ProcessId=26716, TargetElement.ControlType=Window
+
+--- Windows ---
+  WindowId=205701f0-73a8-467f-9a9c-3ed69e86627a, Title=Log File Signature Verification, AppTag=, ProcessId=26716, Handle=26681406, CaptureCount=1
+  WindowId=706e4c5c-9971-4a00-aa6d-2184c41619c6, Title=Taskbar, AppTag=, ProcessId=10700, Handle=131310, CaptureCount=1
+  WindowId=b119b81f-d4f1-4547-a143-42a3ad810ac8, Title=..:: HSM Admin Application, AppTag=, ProcessId=26716, Handle=1907222, CaptureCount=1
+
+--- Screenshots ---
+
+--- Exception ---
+Type: System.InvalidOperationException
+Message: Collection was modified; enumeration operation may not execute.
+StackTrace:    at System.Collections.Generic.List`1.Enumerator.MoveNext()
+   at WindowsUiFlowRecorder.Application.Export.ExportService.MarkInteractedElements(List`1 windows, List`1 actions) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Application\Export\ExportService.cs:line 221
+   at WindowsUiFlowRecorder.Application.Export.ExportService.MapSessionToExport(RecordingSession session) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Application\Export\ExportService.cs:line 158
+   at WindowsUiFlowRecorder.Application.Export.ExportService.ExportSessionAsync(RecordingSession session, String outputDirectory, CancellationToken ct) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Application\Export\ExportService.cs:line 26
+   at WindowsUiFlowRecorder.Application.Recording.RecordingSessionService.ExportSessionAsync(String outputDirectory, CancellationToken ct) in D:\GIT\WindowsUiFlowRecorder\src\WindowsUiFlowRecorder.Application\Recording\RecordingSessionService.cs:line 289
