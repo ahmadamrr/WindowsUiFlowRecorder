@@ -188,6 +188,98 @@ public class SessionEdgeCaseTests
         states.Should().Contain(RecordingSessionState.Reviewing);
     }
 
+    [Fact]
+    public async Task StopSessionAsync_AwaitsCaptureLoop_CompletesPromptly()
+    {
+        var mocks = CreateMocks();
+        var service = CreateService(mocks);
+
+        var chain = new ApplicationLaunchChain([CreateLaunchStep()]);
+        await service.PrepareAsync(chain, CancellationToken.None);
+        mocks.LaunchMock.Setup(l => l.ExecuteLaunchChainAsync(
+                It.IsAny<ApplicationLaunchChain>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyList<TargetApplicationContext>>.Success(
+                new List<TargetApplicationContext> { CreateContext() }.AsReadOnly()));
+        SetupHappyPath(mocks);
+        await service.StartRecordingAsync(CancellationToken.None);
+        service.CurrentState.Should().Be(RecordingSessionState.Recording);
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var result = await service.StopSessionAsync(CancellationToken.None);
+        sw.Stop();
+
+        result.IsSuccess.Should().BeTrue();
+        service.CurrentState.Should().Be(RecordingSessionState.Reviewing);
+        sw.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(3));
+    }
+
+    [Fact]
+    public async Task ExportSessionAsync_UsesSnapshot_NotLiveReference()
+    {
+        var mocks = CreateMocks();
+        var service = CreateService(mocks);
+        RecordingSession? capturedForExport = null;
+        mocks.ExportMock.Setup(e => e.ExportSessionAsync(
+                It.IsAny<RecordingSession>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<RecordingSession, string, CancellationToken>((s, _, _) => capturedForExport = s)
+            .ReturnsAsync(Result.Success());
+
+        var chain = new ApplicationLaunchChain([CreateLaunchStep()]);
+        await service.PrepareAsync(chain, CancellationToken.None);
+        mocks.LaunchMock.Setup(l => l.ExecuteLaunchChainAsync(
+                It.IsAny<ApplicationLaunchChain>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyList<TargetApplicationContext>>.Success(
+                new List<TargetApplicationContext> { CreateContext() }.AsReadOnly()));
+        SetupHappyPath(mocks);
+        await service.StartRecordingAsync(CancellationToken.None);
+        await service.StopSessionAsync(CancellationToken.None);
+
+        var result = await service.ExportSessionAsync("/tmp/export", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        capturedForExport.Should().NotBeNull();
+        capturedForExport.Should().NotBeSameAs(service.CurrentSession);
+        capturedForExport!.Actions.Should().NotBeSameAs(service.CurrentSession!.Actions);
+        capturedForExport.Windows.Should().NotBeSameAs(service.CurrentSession.Windows);
+        capturedForExport.Screenshots.Should().NotBeSameAs(service.CurrentSession.Screenshots);
+    }
+
+    [Fact]
+    public async Task ExportSessionAsync_SnapshotContents_MatchOriginal()
+    {
+        var mocks = CreateMocks();
+        var service = CreateService(mocks);
+        RecordingSession? capturedForExport = null;
+        mocks.ExportMock.Setup(e => e.ExportSessionAsync(
+                It.IsAny<RecordingSession>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<RecordingSession, string, CancellationToken>((s, _, _) => capturedForExport = s)
+            .ReturnsAsync(Result.Success());
+
+        var chain = new ApplicationLaunchChain([CreateLaunchStep()]);
+        await service.PrepareAsync(chain, CancellationToken.None);
+        mocks.LaunchMock.Setup(l => l.ExecuteLaunchChainAsync(
+                It.IsAny<ApplicationLaunchChain>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyList<TargetApplicationContext>>.Success(
+                new List<TargetApplicationContext> { CreateContext() }.AsReadOnly()));
+        SetupHappyPath(mocks);
+        await service.StartRecordingAsync(CancellationToken.None);
+        await service.StopSessionAsync(CancellationToken.None);
+
+        var original = service.CurrentSession!;
+        var actionCountBeforeExport = original.Actions.Count;
+        var windowCountBeforeExport = original.Windows.Count;
+        var screenshotCountBeforeExport = original.Screenshots.Count;
+
+        var result = await service.ExportSessionAsync("/tmp/export", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        capturedForExport!.Actions.Count.Should().Be(actionCountBeforeExport);
+        capturedForExport.Windows.Count.Should().Be(windowCountBeforeExport);
+        capturedForExport.Screenshots.Count.Should().Be(screenshotCountBeforeExport);
+        capturedForExport.SessionId.Should().Be(original.SessionId);
+        capturedForExport.Name.Should().Be(original.Name);
+    }
+
     private static (Mock<IApplicationLaunchOrchestrator> LaunchMock, Mock<IGlobalInputHook> InputMock,
         Mock<IUiAutomationProvider> UiaMock, Mock<IScreenshotCapturer> ScreenshotMock,
         Mock<IProcessLaunchMonitor> ProcessMock, Mock<IExportService> ExportMock,
