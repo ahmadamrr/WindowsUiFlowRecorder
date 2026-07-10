@@ -573,23 +573,32 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                     var snapshot = windowResult.Value;
                     elementProcessId = snapshot.ProcessId;
 
-                    if (elementProcessId == _recorderProcessId)
-                        return;
-
-                    windowId = snapshot.WindowId;
-                    applicationTag = snapshot.ApplicationTag;
-                    targetElement = snapshot.RootElement;
-                    await ApplyWindowSnapshotAsync(snapshot, settings);
-                }
-                else
-                {
-                    var elementResult = await _uiAutomation.GetElementAtPointAsync(
-                        last.ScreenPosition.Value, ct);
-                    if (elementResult.IsSuccess)
+                    if (elementProcessId != _recorderProcessId)
                     {
-                        targetElement = elementResult.Value;
-                        elementProcessId = targetElement.ProcessId;
+                        windowId = snapshot.WindowId;
+                        applicationTag = snapshot.ApplicationTag;
+                        await ApplyWindowSnapshotAsync(snapshot, settings);
                     }
+                }
+
+                var elementResult = await _uiAutomation.GetElementAtPointAsync(
+                    last.ScreenPosition.Value, ct);
+                if (elementResult.IsSuccess)
+                {
+                    var elem = elementResult.Value;
+                    if (elem.ProcessId != _recorderProcessId)
+                    {
+                        targetElement = elem;
+                        elementProcessId = elem.ProcessId;
+                    }
+                }
+
+                if (elementProcessId == _recorderProcessId)
+                    return;
+
+                if (targetElement == null && windowResult.IsSuccess)
+                {
+                    targetElement = windowResult.Value.RootElement;
                 }
             }
             else if (first.EventType is InputEventType.KeyDown or InputEventType.KeyUp or InputEventType.FocusGained)
