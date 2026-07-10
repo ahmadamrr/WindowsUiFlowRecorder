@@ -308,6 +308,9 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                 "Actions={Actions}, Windows={Windows}, Screenshots={Screenshots}",
                 sessionForExport.Actions.Count, sessionForExport.Windows.Count,
                 sessionForExport.Screenshots.Count);
+
+            DumpExportDiagnostics(ex, sessionForExport);
+
             SetState(RecordingSessionState.Reviewing);
             ErrorOccurred?.Invoke("Export failed due to concurrent modification. Please try again.");
             return Result.Failure(FailureReason.Unknown, "Concurrent modification during export");
@@ -819,6 +822,81 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
     {
         CurrentState = newState;
         StateChanged?.Invoke(newState);
+    }
+
+    private static void DumpExportDiagnostics(Exception exception, RecordingSession session)
+    {
+        try
+        {
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var diagDir = Path.Combine(localAppData, "WindowsUiFlowRecorder", "diagnostics");
+            Directory.CreateDirectory(diagDir);
+
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+            var filePath = Path.Combine(diagDir, $"export_error_{timestamp}.txt");
+
+            using var writer = new StreamWriter(filePath, append: false);
+
+            writer.WriteLine("=== Export Diagnostic Dump ===");
+            writer.WriteLine($"Timestamp (UTC): {DateTime.UtcNow:O}");
+            writer.WriteLine();
+            writer.WriteLine("--- Session State ---");
+            writer.WriteLine($"SessionId: {session.SessionId}");
+            writer.WriteLine($"Name: {session.Name}");
+            writer.WriteLine($"State: {session.State}");
+            writer.WriteLine($"Actions.Count: {session.Actions.Count}");
+            writer.WriteLine($"Windows.Count: {session.Windows.Count}");
+            writer.WriteLine($"Screenshots.Count: {session.Screenshots.Count}");
+            writer.WriteLine($"TargetApplicationContexts.Count: {session.TargetApplicationContexts.Count}");
+            writer.WriteLine($"CreatedAtUtc: {session.CreatedAtUtc:O}");
+            writer.WriteLine($"StartedAtUtc: {session.StartedAtUtc:O}");
+            writer.WriteLine($"StoppedAtUtc: {session.StoppedAtUtc:O}");
+            writer.WriteLine();
+
+            writer.WriteLine("--- Actions ---");
+            for (var i = 0; i < session.Actions.Count; i++)
+            {
+                var a = session.Actions[i];
+                writer.WriteLine($"  [{i}] ActionId={a.ActionId}, Seq={a.SequenceNumber}, " +
+                    $"Type={a.ActionType}, WindowId={a.WindowId}, AppTag={a.ApplicationTag}, " +
+                    $"TargetElement.ProcessId={a.TargetElement?.ProcessId}, TargetElement.ControlType={a.TargetElement?.ControlType}");
+            }
+
+            writer.WriteLine();
+            writer.WriteLine("--- Windows ---");
+            foreach (var kvp in session.Windows)
+            {
+                var w = kvp.Value;
+                writer.WriteLine($"  WindowId={kvp.Key}, Title={w.Title}, AppTag={w.ApplicationTag}, " +
+                    $"ProcessId={w.ProcessId}, Handle={w.NativeWindowHandle}, CaptureCount={w.CaptureCount}");
+            }
+
+            writer.WriteLine();
+            writer.WriteLine("--- Screenshots ---");
+            for (var i = 0; i < session.Screenshots.Count; i++)
+            {
+                var s = session.Screenshots[i];
+                writer.WriteLine($"  [{i}] ScreenshotId={s.ScreenshotId}, File={s.RelativeFilePath}, Scope={s.Scope}");
+            }
+
+            writer.WriteLine();
+            writer.WriteLine("--- Exception ---");
+            writer.WriteLine($"Type: {exception.GetType().FullName}");
+            writer.WriteLine($"Message: {exception.Message}");
+            writer.WriteLine($"StackTrace: {exception.StackTrace}");
+            if (exception.InnerException != null)
+            {
+                writer.WriteLine();
+                writer.WriteLine("--- Inner Exception ---");
+                writer.WriteLine($"Type: {exception.InnerException.GetType().FullName}");
+                writer.WriteLine($"Message: {exception.InnerException.Message}");
+                writer.WriteLine($"StackTrace: {exception.InnerException.StackTrace}");
+            }
+        }
+        catch
+        {
+            // best-effort diagnostic dump — never throw from here
+        }
     }
 
     public void Dispose()
