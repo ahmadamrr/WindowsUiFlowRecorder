@@ -20,4 +20,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="WindowsUiFlowRecorder.Infrastructure.Tests" />
+  </ItemGroup>
+
 </Project>

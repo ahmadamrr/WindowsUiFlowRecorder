@@ -75,12 +75,17 @@ public class EndToEndFlowTests
 
         var windowId = Guid.NewGuid();
         var testElement = new ElementInfo(
-            "btn1", "button1", "OK", "Button", null, null, null, null,
+            "btn1", "button1", "OK", "Button", null, null, "WinForm", null,
             true, false, true, new BoundingRectangle(100, 100, 80, 30),
             ["Invoke"], null, 2, 0, []);
 
         uiaMock.Setup(u => u.GetElementAtPointAsync(It.IsAny<ScreenPoint>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<ElementInfo>.Success(testElement));
+
+        uiaMock.Setup(u => u.GetElementWithPathAtPointAsync(It.IsAny<ScreenPoint>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<(ElementInfo, IReadOnlyList<string>)>.Success((
+                testElement,
+                new List<string> { "Window:Calculator", "Pane#mainPanel", "Button:OK#button1" })));
 
         var testWindow = new WindowSnapshot(
             windowId, "Calculator", 1001, IntPtr.Zero, "Calculator Window", "WindowClass",

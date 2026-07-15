@@ -276,6 +276,42 @@ public class ExportServiceTests
         var result = await _exportService.ExportStandaloneScanAsync(snapshot, "/tmp/export", CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
+        _writerMock.Verify(w => w.WriteExportAsync(
+            It.IsAny<ExportPackage>(), It.IsAny<string>(),
+            It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>(),
+            It.IsAny<string?>(), It.IsAny<string?>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExportSessionAsync_ElementPathAndFrameworkId_PreservedInExport()
+    {
+        ExportPackage? capturedPackage = null;
+        _writerMock.Setup(w => w.WriteExportAsync(
+                It.IsAny<ExportPackage>(), It.IsAny<string>(),
+                It.IsAny<IReadOnlyList<ScreenshotReference>>(), It.IsAny<CancellationToken>(),
+                It.IsAny<string?>(), It.IsAny<string?>()))
+            .Callback<ExportPackage, string, IReadOnlyList<ScreenshotReference>, CancellationToken, string?, string?>(
+                (pkg, _, _, _, _, _) => capturedPackage = pkg)
+            .ReturnsAsync(Result.Success());
+
+        var session = CreateTestSession();
+
+        var result = await _exportService.ExportSessionAsync(session, "/tmp/export", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+
+        capturedPackage.Should().NotBeNull();
+        var recordingExport = capturedPackage!.RecordingSession;
+        recordingExport.Should().NotBeNull();
+
+        recordingExport!.Actions.Should().HaveCount(1);
+        var action = recordingExport.Actions[0];
+
+        action.ElementPath.Should().NotBeEmpty();
+        action.ElementPath.Should().Equal("Window:Calculator", "Pane#mainPanel", "Button:OK#button1");
+
+        action.TargetElement.Should().NotBeNull();
+        action.TargetElement!.FrameworkId.Should().Be("WinForm");
     }
 
     private static RecordingSession CreateTestSession()
@@ -298,10 +334,11 @@ public class ExportServiceTests
         session.Actions.Add(new RecordedAction(
             Guid.NewGuid(), 1, DateTime.UtcNow.AddMinutes(-4),
             ActionType.Click, "TestApp", Guid.NewGuid(),
-            new ElementInfo("btn1", "button1", "OK", "Button", null, null, null, null,
+            new ElementInfo("btn1", "button1", "OK", "Button", null, null, "WinForm", null,
                 true, false, false, new BoundingRectangle(100, 100, 50, 20),
                 ["Invoke"], null, 1, 0, []),
-            [], new ScreenPoint(120, 110), null, null, null, null, null));
+            ["Window:Calculator", "Pane#mainPanel", "Button:OK#button1"],
+            new ScreenPoint(120, 110), null, null, null, null, null));
 
         return session;
     }

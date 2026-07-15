@@ -82,4 +82,36 @@ public class SerializationTests
         deserialized.LaunchChain.Steps[1].ApplicationTag.Should().Be("EAdminApp");
         deserialized.LaunchChain.Steps[0].ReadinessCondition.ExpectedPropertyValue.Should().Be("Connected");
     }
+
+    [Fact]
+    public void RecordedAction_WithElementPath_RoundTripsCorrectly()
+    {
+        var element = new ElementInfo(
+            "btn1", "button1", "OK", "Button", null, null, "WinForm", null,
+            true, false, false, new BoundingRectangle(100, 100, 50, 20),
+            ["Invoke"], null, 1, 0, []);
+        var original = new RecordedAction(
+            Guid.NewGuid(), 1, DateTime.UtcNow,
+            ActionType.Click, "TestApp", Guid.NewGuid(),
+            element,
+            ["Window:Calculator", "Pane#mainPanel", "Button:OK#button1"],
+            new ScreenPoint(120, 110), null, null, null, null, null);
+
+        var json = JsonSerializer.Serialize(original, JsonOptions);
+
+        json.Should().NotBeNullOrEmpty();
+        json.Should().Contain("ElementPath");
+        json.Should().Contain("Window:Calculator");
+        json.Should().Contain("Pane#mainPanel");
+        json.Should().Contain("Button:OK#button1");
+        json.Should().Contain("WinForm");
+
+        var deserialized = JsonSerializer.Deserialize<RecordedAction>(json, JsonOptions);
+
+        deserialized.Should().NotBeNull();
+        deserialized!.ElementPath.Should().HaveCount(3);
+        deserialized.ElementPath.Should().Equal("Window:Calculator", "Pane#mainPanel", "Button:OK#button1");
+        deserialized.TargetElement.Should().NotBeNull();
+        deserialized.TargetElement!.FrameworkId.Should().Be("WinForm");
+    }
 }
