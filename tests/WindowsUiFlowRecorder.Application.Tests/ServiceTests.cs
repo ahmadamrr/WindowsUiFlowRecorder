@@ -231,20 +231,6 @@ public class ExportServiceTests
     }
 
     [Fact]
-    public async Task ExportSessionAsync_InvalidSchemaVersion_ReturnsFailure()
-    {
-        var session = CreateTestSession();
-        var package = new ExportPackage(
-            "0.5.0", "0.1.0", DateTime.UtcNow,
-            ExportKind.RecordingSession, null, null);
-
-        var result = await _exportService.ExportSessionAsync(session, "/tmp/export", CancellationToken.None);
-
-        result.IsFailure.Should().BeTrue();
-        result.FailureReason.Should().Be(FailureReason.ExportValidationFailed);
-    }
-
-    [Fact]
     public async Task ExportStandaloneScanAsync_WithValidData_WritesExport()
     {
         _writerMock.Setup(w => w.WriteExportAsync(

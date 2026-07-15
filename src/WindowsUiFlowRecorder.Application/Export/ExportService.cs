@@ -10,7 +10,7 @@ public class ExportService : IExportService
     private readonly IExportWriter _writer;
     private readonly ILogger<ExportService> _logger;
 
-    private const string CurrentSchemaVersion = "1.1.0";
+    private const string CurrentSchemaVersion = "1.2.0";
     private readonly int _recorderProcessId;
 
     public ExportService(IExportWriter writer, ILogger<ExportService> logger)
@@ -124,7 +124,13 @@ public class ExportService : IExportService
                 var matched = session.Screenshots.Find(s => s.ScreenshotId == action.ScreenshotId.Value);
                 if (matched != null)
                     screenshots.Add(matched);
+                continue;
             }
+
+            var byActionId = session.Screenshots.Find(s =>
+                s.AssociatedActionId == action.ActionId && seen.Add(s.ScreenshotId));
+            if (byActionId != null)
+                screenshots.Add(byActionId);
         }
 
         return screenshots;
