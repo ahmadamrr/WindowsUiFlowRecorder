@@ -53,7 +53,7 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
 
             var (deepest, ancestors) = ResolveDeepestElementAtPointWithPath(element, point);
             var info = BuildElementInfo(deepest, 0);
-            var path = BuildAncestorPath(ancestors);
+            var path = ElementPathFormatter.BuildAncestorPath(ancestors);
             return Task.FromResult(Result<(ElementInfo, IReadOnlyList<string>)>.Success((info, path)));
         }
         catch (Exception ex)
@@ -169,35 +169,6 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
         {
             return element;
         }
-    }
-
-    private static IReadOnlyList<string> BuildAncestorPath(List<AutomationElement> ancestors)
-    {
-        var path = new List<string>(ancestors.Count);
-        foreach (var el in ancestors)
-        {
-            try
-            {
-                var ctrlType = el.ControlType.ToString() ?? "Unknown";
-                var name = el.Name ?? "";
-                var autoId = el.AutomationId ?? "";
-
-                var entry = ctrlType;
-                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(autoId))
-                    entry = $"{ctrlType}:{name}#{autoId}";
-                else if (!string.IsNullOrEmpty(name))
-                    entry = $"{ctrlType}:{name}";
-                else if (!string.IsNullOrEmpty(autoId))
-                    entry = $"{ctrlType}#{autoId}";
-
-                path.Add(entry);
-            }
-            catch
-            {
-                path.Add("Unknown");
-            }
-        }
-        return path;
     }
 
     public Task<Result<ElementInfo>> GetFocusedElementAsync(CancellationToken ct)

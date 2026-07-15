@@ -17,6 +17,7 @@ Thumbs.db
 # Output / publish
 publish/
 Release/
+output/
 
 # NuGet packages
 packages/

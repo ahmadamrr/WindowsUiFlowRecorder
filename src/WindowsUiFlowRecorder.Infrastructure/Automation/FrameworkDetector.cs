@@ -1,16 +1,10 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using FlaUI.Core.AutomationElements;
 
 namespace WindowsUiFlowRecorder.Infrastructure.Automation;
 
 internal static class FrameworkDetector
 {
-    private static readonly HashSet<string> _knownFrameworkIds = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "WinForm", "WPF", "WinUI", "Win32", "WinForms", "WindowsForms"
-    };
-
     internal static string DetectFramework(AutomationElement element, int processId)
     {
         try
@@ -77,7 +71,7 @@ internal static class FrameworkDetector
         return false;
     }
 
-    private static bool TryDetectFromClassName(string className, out string frameworkId)
+    internal static bool TryDetectFromClassName(string className, out string frameworkId)
     {
         if (string.IsNullOrWhiteSpace(className))
         {
@@ -167,7 +161,7 @@ internal static class FrameworkDetector
         return false;
     }
 
-    private static string NormalizeFrameworkId(string raw)
+    internal static string NormalizeFrameworkId(string raw)
     {
         if (string.IsNullOrWhiteSpace(raw))
             return "Unknown";
