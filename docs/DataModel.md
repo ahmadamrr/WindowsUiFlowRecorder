@@ -146,7 +146,7 @@ A single captured user action (FR-3.1–FR-3.4).
 | `ApplicationTag` | string | Required | Matches a `TargetApplicationInformation.ApplicationTag` in the same export — identifies which application this action occurred in. |
 | `WindowId` | guid | Required | References a `WindowInformation.WindowId` in the same export — the window this action occurred in. |
 | `TargetElement` | `ElementInformation` | Required for all types except `WindowActivated` | Snapshot of the element's UIA metadata at the moment of the action. For `WindowActivated`, this field is omitted since the action targets the window itself, not a control. |
-| `ElementPath` | array of strings | Required (empty array allowed) | Breadcrumb of ancestor `ControlType`/`AutomationId` pairs from the window root down to `TargetElement`, e.g. `["Window", "Pane#mainPanel", "Button#submitBtn"]`, giving a human-readable location without needing to walk `WindowInformation.RootElement` manually. |
+| `ElementPath` | array of strings | Required (empty array allowed) | Breadcrumb of ancestor `ControlType` from the window root down to `TargetElement`, each entry optionally including `Name` and/or `AutomationId`. Format: `"ControlType"`, `"ControlType:Name"`, `"ControlType#AutomationId"`, or `"ControlType:Name#AutomationId"`. Example: `["Window:Calculator", "Pane#mainPanel", "Button:Submit#submitBtn"]`. Gives a human-readable location without needing to walk `WindowInformation.RootElement` manually. |
 | `ScreenPoint` | object `{ X: integer, Y: integer }` | Optional | Present for `Click`, `RightClick`, `DoubleClick`, and the end-point of a `Drag`. |
 | `DragStartPoint` | object `{ X: integer, Y: integer }` | Optional | Present only for `ActionType = Drag`. |
 | `EnteredText` | string | Optional | Present only for `ActionType = TextEntry` — the final resolved text value of the control after coalescing (`SystemDesign.md` §8), not a per-keystroke log. |
@@ -183,6 +183,7 @@ A single UI Automation element, recursively nested to represent hierarchy (FR-3.
 | `ControlType` | string | Required | UIA `ControlType` (e.g. `"Button"`, `"Edit"`, `"TreeItem"`). |
 | `LocalizedControlType` | string | Optional | UIA `LocalizedControlType`, when it differs meaningfully from `ControlType`. |
 | `ClassName` | string | Optional | Underlying Win32/WPF class name, when available. |
+| `FrameworkId` | string | Required (may be `"Unknown"`) | UIA `FrameworkId` property (e.g. `"WinForm"`, `"WPF"`, `"WinUI"`, `"Win32"`). When the UIA property is empty, a fallback chain resolves it via ancestor element's FrameworkId → Win32 class-name pattern matching → target process's loaded modules, ensuring this field is never empty in the export. |
 | `HelpText` | string | Optional | UIA `HelpText` property, when populated by the target application. |
 | `IsEnabled` | boolean | Required | Whether the control was enabled at capture time. |
 | `IsOffscreen` | boolean | Required | Whether UIA reported the control as off-screen at capture time. |
@@ -191,6 +192,7 @@ A single UI Automation element, recursively nested to represent hierarchy (FR-3.
 | `SupportedPatterns` | array of strings | Required (empty array allowed) | UIA control patterns the element supports (e.g. `"Invoke"`, `"Value"`, `"Toggle"`, `"ExpandCollapse"`, `"Selection"`). |
 | `ValueOrText` | string | Optional | Current value/text content, when the element supports the `Value` or `Text` pattern (e.g. a TextBox's current contents or a Label's text). |
 | `DepthInTree` | integer | Required | Distance from the window's `RootElement` (root = 0). Preserved even when `HierarchyExportScope` (§7.1) omits intermediate ancestors, per `SystemDesign.md` §17.4. |
+| `ProcessId` | integer | Required | OS process ID of the element's owning application at capture time. |
 | `WasInteractedWith` | boolean | Required (default `false`) | `true` if this element was the `TargetElement` of at least one `RecordedAction` in the session, per the matching rule in `SystemDesign.md` §17.2. Lets a reviewer or downstream tool distinguish the handful of elements the tester actually touched from the rest of the captured tree without manually cross-referencing `Actions`. |
 | `InteractionCount` | integer | Required (default `0`) | How many `RecordedAction`s matched this element. |
 | `InteractedActionIds` | array of guid | Required (empty array allowed) | The `ActionId`s (in `SequenceNumber` order) of every `RecordedAction` that matched this element, per `SystemDesign.md` §17.3 — lets a reader jump directly from an element in the tree to the specific action(s) that touched it. |
@@ -391,6 +393,7 @@ A lightweight, non-exported projection used only to render FR-8.1's session list
 |---|---|---|
 | `1.0.0` | Initial MVP export contract (§4). | — |
 | `1.1.0` | Added `WasInteractedWith`, `InteractionCount`, `InteractedActionIds` to `ElementInformation` (§4.7); added `HierarchyExportScope` to `Settings` (§7.1); no existing field removed, renamed, or reinterpreted. | MINOR — purely additive; a consumer built against `1.0.0` that ignores unknown fields reads a `1.1.0` export without modification. |
+| `1.2.0` | Added `FrameworkId`, `ProcessId` fields to `ElementInformation` (§4.7); updated `ElementPath` (§4.5) format to include `Name` alongside `ControlType` and `AutomationId`. | MINOR — purely additive; existing consumers reading `1.1.0` exports see no change when reading `1.2.0` files. |
 
 Future entries are appended to this table, never inserted out of order, so the changelog itself remains a reliable audit trail of the export contract's history.
 

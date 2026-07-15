@@ -21,3 +21,6 @@ Release/
 # NuGet packages
 packages/
 *.nupkg
+
+# WPF temp project files
+*_wpftmp.csproj

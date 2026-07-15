@@ -41,6 +41,29 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
         }
     }
 
+    public Task<Result<(ElementInfo Element, IReadOnlyList<string> AncestorPath)>> GetElementWithPathAtPointAsync(
+        ScreenPoint point, CancellationToken ct)
+    {
+        try
+        {
+            var element = _automation.FromPoint(new Point(point.X, point.Y));
+            if (element == null)
+                return Task.FromResult(Result<(ElementInfo, IReadOnlyList<string>)>.Failure(
+                    FailureReason.ElementNotFound, "No element at point"));
+
+            var (deepest, ancestors) = ResolveDeepestElementAtPointWithPath(element, point);
+            var info = BuildElementInfo(deepest, 0);
+            var path = BuildAncestorPath(ancestors);
+            return Task.FromResult(Result<(ElementInfo, IReadOnlyList<string>)>.Success((info, path)));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get element with path at point ({X},{Y})", point.X, point.Y);
+            return Task.FromResult(Result<(ElementInfo, IReadOnlyList<string>)>.Failure(
+                FailureReason.ElementStale, ex.Message));
+        }
+    }
+
     private AutomationElement ResolveDeepestElementAtPoint(AutomationElement element, ScreenPoint point)
     {
         try
@@ -83,6 +106,98 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
         {
             return element;
         }
+    }
+
+    private (AutomationElement Element, List<AutomationElement> Ancestors) ResolveDeepestElementAtPointWithPath(
+        AutomationElement element, ScreenPoint point)
+    {
+        try
+        {
+            var ancestors = new List<AutomationElement> { element };
+            var result = ResolveDeepestElementAtPointWithPathRecursive(element, point, ancestors);
+            return (result, ancestors);
+        }
+        catch
+        {
+            return (element, [element]);
+        }
+    }
+
+    private AutomationElement ResolveDeepestElementAtPointWithPathRecursive(
+        AutomationElement element, ScreenPoint point, List<AutomationElement> ancestors)
+    {
+        try
+        {
+            var children = element.FindAllChildren();
+            if (children == null || children.Length == 0)
+                return element;
+
+            AutomationElement? bestChild = null;
+            var bestArea = int.MaxValue;
+
+            for (int i = 0; i < Math.Min(children.Length, 200); i++)
+            {
+                try
+                {
+                    var child = children[i];
+                    var rect = child.BoundingRectangle;
+                    if (rect.IsEmpty) continue;
+
+                    var pt = new System.Drawing.Point(point.X, point.Y);
+                    if (!rect.Contains(pt)) continue;
+
+                    var area = (int)(rect.Width * rect.Height);
+
+                    if (area < bestArea && area > 0)
+                    {
+                        bestArea = area;
+                        bestChild = child;
+                    }
+                }
+                catch { }
+            }
+
+            if (bestChild != null && bestChild != element)
+            {
+                ancestors.Add(bestChild);
+                return ResolveDeepestElementAtPointWithPathRecursive(bestChild, point, ancestors);
+            }
+
+            return element;
+        }
+        catch
+        {
+            return element;
+        }
+    }
+
+    private static IReadOnlyList<string> BuildAncestorPath(List<AutomationElement> ancestors)
+    {
+        var path = new List<string>(ancestors.Count);
+        foreach (var el in ancestors)
+        {
+            try
+            {
+                var ctrlType = el.ControlType.ToString() ?? "Unknown";
+                var name = el.Name ?? "";
+                var autoId = el.AutomationId ?? "";
+
+                var entry = ctrlType;
+                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(autoId))
+                    entry = $"{ctrlType}:{name}#{autoId}";
+                else if (!string.IsNullOrEmpty(name))
+                    entry = $"{ctrlType}:{name}";
+                else if (!string.IsNullOrEmpty(autoId))
+                    entry = $"{ctrlType}#{autoId}";
+
+                path.Add(entry);
+            }
+            catch
+            {
+                path.Add("Unknown");
+            }
+        }
+        return path;
     }
 
     public Task<Result<ElementInfo>> GetFocusedElementAsync(CancellationToken ct)
@@ -221,7 +336,7 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
                 element.ControlType.ToString() ?? "Unknown",
                 null,
                 element.ClassName,
-                element.Properties.FrameworkId.ValueOrDefault ?? "",
+                FrameworkDetector.DetectFramework(element, pid),
                 element.HelpText,
                 element.IsEnabled,
                 element.IsOffscreen,
@@ -242,7 +357,7 @@ public class FlaUiAutomationProvider : IUiAutomationProvider, IDisposable
 
     private static ElementInfo CreateTruncatedElement(int depth) => new(
         Guid.NewGuid().ToString(), null, null, "Unknown",
-        null, null, null, null, false, false, false,
+        null, null, "Unknown", null, false, false, false,
         new BoundingRectangle(0, 0, 0, 0), [], null, depth, 0, []);
 
     public Task<Result> SubscribeToEventsAsync(

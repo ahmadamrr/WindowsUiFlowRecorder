@@ -559,6 +559,7 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
             var last = events[^1];
 
             ElementInfo? targetElement = null;
+            IReadOnlyList<string> elementPath = Array.Empty<string>();
             Guid windowId = Guid.Empty;
             string applicationTag = "Unknown";
             int elementProcessId = 0;
@@ -581,15 +582,16 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                     }
                 }
 
-                var elementResult = await _uiAutomation.GetElementAtPointAsync(
+                var elementResult = await _uiAutomation.GetElementWithPathAtPointAsync(
                     last.ScreenPosition.Value, ct);
                 if (elementResult.IsSuccess)
                 {
-                    var elem = elementResult.Value;
+                    var (elem, path) = elementResult.Value;
                     if (elem.ProcessId != _recorderProcessId)
                     {
                         targetElement = elem;
                         elementProcessId = elem.ProcessId;
+                        elementPath = path;
                     }
                 }
 
@@ -663,7 +665,8 @@ public class RecordingSessionService : IRecordingSessionService, IDisposable
                     false, false, false, new BoundingRectangle(0, 0, 0, 0), [], null, 0, 0, []),
                 windowId,
                 applicationTag,
-                seq);
+                seq,
+                elementPath);
 
             var screenshotMode = settings?.ScreenshotMode ?? ScreenshotMode.EveryAction;
             if (screenshotMode == ScreenshotMode.EveryAction ||

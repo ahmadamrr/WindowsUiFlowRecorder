@@ -17,7 +17,7 @@ public class ActionCoalescingPolicyTests
         };
 
         var element = CreateTestElement();
-        var result = ActionCoalescingPolicy.Coalesce(events, element, Guid.NewGuid(), "TestApp", 1);
+        var result = ActionCoalescingPolicy.Coalesce(events, element, Guid.NewGuid(), "TestApp", 1, []);
 
         result.ActionType.Should().Be(ActionType.Click);
     }
@@ -32,7 +32,7 @@ public class ActionCoalescingPolicyTests
         };
 
         var element = CreateTestElement();
-        var result = ActionCoalescingPolicy.Coalesce(events, element, Guid.NewGuid(), "TestApp", 1);
+        var result = ActionCoalescingPolicy.Coalesce(events, element, Guid.NewGuid(), "TestApp", 1, []);
 
         result.ActionType.Should().Be(ActionType.TextEntry);
     }
@@ -46,7 +46,7 @@ public class ActionCoalescingPolicyTests
         };
 
         var element = CreateTestElement();
-        var result = ActionCoalescingPolicy.Coalesce(events, element, Guid.NewGuid(), "TestApp", 1);
+        var result = ActionCoalescingPolicy.Coalesce(events, element, Guid.NewGuid(), "TestApp", 1, []);
 
         result.ActionType.Should().Be(ActionType.WindowActivated);
         result.TargetElement.Should().BeNull();
@@ -56,7 +56,7 @@ public class ActionCoalescingPolicyTests
     public void Coalesce_EmptyEvents_ThrowsArgumentException()
     {
         var element = CreateTestElement();
-        Action act = () => ActionCoalescingPolicy.Coalesce([], element, Guid.NewGuid(), "TestApp", 1);
+        Action act = () => ActionCoalescingPolicy.Coalesce([], element, Guid.NewGuid(), "TestApp", 1, []);
         act.Should().Throw<ArgumentException>();
     }
 

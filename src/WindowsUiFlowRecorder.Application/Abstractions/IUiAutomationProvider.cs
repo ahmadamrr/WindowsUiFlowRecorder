@@ -6,6 +6,7 @@ using WindowsUiFlowRecorder.Domain.Entities;
 public interface IUiAutomationProvider
 {
     Task<Result<ElementInfo>> GetElementAtPointAsync(ScreenPoint point, CancellationToken ct);
+    Task<Result<(ElementInfo Element, IReadOnlyList<string> AncestorPath)>> GetElementWithPathAtPointAsync(ScreenPoint point, CancellationToken ct);
     Task<Result<ElementInfo>> GetFocusedElementAsync(CancellationToken ct);
     Task<Result<WindowSnapshot>> GetWindowAtPointAsync(ScreenPoint point, int maxElementCount, CancellationToken ct);
     Task<Result<WindowSnapshot>> WalkHierarchyAsync(IntPtr windowHandle, int maxElementCount, CancellationToken ct);

@@ -30,7 +30,8 @@ public static class ActionCoalescingPolicy
         ElementInfo targetElement,
         Guid windowId,
         string applicationTag,
-        int sequenceNumber)
+        int sequenceNumber,
+        IReadOnlyList<string> elementPath)
     {
         if (events.Count == 0)
             throw new ArgumentException("Cannot coalesce zero events", nameof(events));
@@ -44,7 +45,7 @@ public static class ActionCoalescingPolicy
             return new RecordedAction(
                 Guid.NewGuid(), sequenceNumber, now,
                 ActionType.Drag, applicationTag, windowId,
-                targetElement, [], last.ScreenPosition,
+                targetElement, elementPath, last.ScreenPosition,
                 first.ScreenPosition, null, null, null, null);
         }
 
@@ -54,7 +55,7 @@ public static class ActionCoalescingPolicy
             return new RecordedAction(
                 Guid.NewGuid(), sequenceNumber, now,
                 ActionType.TextEntry, applicationTag, windowId,
-                targetElement, [], null, null, text, null, null, null);
+                targetElement, elementPath, null, null, text, null, null, null);
         }
 
         if (IsClick(events))
@@ -62,7 +63,7 @@ public static class ActionCoalescingPolicy
             return new RecordedAction(
                 Guid.NewGuid(), sequenceNumber, now,
                 ActionType.Click, applicationTag, windowId,
-                targetElement, [], last.ScreenPosition,
+                targetElement, elementPath, last.ScreenPosition,
                 null, null, null, null, null);
         }
 
@@ -80,13 +81,13 @@ public static class ActionCoalescingPolicy
             return new RecordedAction(
                 Guid.NewGuid(), sequenceNumber, now,
                 ActionType.KeyPress, applicationTag, windowId,
-                targetElement, [], null, null, null, keyName, null, null);
+                targetElement, elementPath, null, null, null, keyName, null, null);
         }
 
         return new RecordedAction(
             Guid.NewGuid(), sequenceNumber, now,
             ActionType.FocusChanged, applicationTag, windowId,
-            targetElement, [], null, null, null, null, null, null);
+            targetElement, elementPath, null, null, null, null, null, null);
     }
 
     private static bool IsClick(IReadOnlyList<RawInputEvent> events) =>

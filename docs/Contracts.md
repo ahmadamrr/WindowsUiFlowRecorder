@@ -466,6 +466,15 @@ public interface IUiAutomationProvider
         ScreenPoint point,
         CancellationToken ct);
 
+    // Lookup an element by screen point, returning both the deepest
+    // element under the cursor and its ancestor path from the window
+    // root. Each path entry follows the format defined in DataModel.md
+    // §4.5: "ControlType", "ControlType:Name", "ControlType#AutomationId",
+    // or "ControlType:Name#AutomationId".
+    Task<Result<(ElementInfo Element, IReadOnlyList<string> AncestorPath)>> GetElementWithPathAtPointAsync(
+        ScreenPoint point,
+        CancellationToken ct);
+
     // Lookup the currently focused element (for keyboard/focus events).
     Task<Result<ElementInfo>> GetFocusedElementAsync(CancellationToken ct);
 
